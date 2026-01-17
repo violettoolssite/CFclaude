@@ -1,0 +1,11 @@
+name = "claude-ai-proxy"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Workers AI 绑定 (支持 AI 或 claude 命名)
+[ai]
+binding = "AI"
+
+# 如果你使用 claude 作为 binding 名称，改为：
+# [ai]
+# binding = "claude"

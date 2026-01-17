@@ -1,0 +1,23 @@
+{
+  "apiKey": "your-deepseek-api-key",
+  "model": "deepseek-coder",
+  "baseURL": "https://api.deepseek.com",
+  "maxContextTokens": 16000,
+  "autoConfirm": false,
+  "ignorePaths": [
+    "node_modules",
+    ".git",
+    "dist",
+    "build",
+    "__pycache__",
+    ".venv"
+  ],
+  "dangerousCommands": [
+    "rm -rf",
+    "del /f",
+    "format",
+    "mkfs",
+    "dd if="
+  ]
+}
+

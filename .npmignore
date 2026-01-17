@@ -1,0 +1,27 @@
+# Source files
+src/
+
+# Config files
+tsconfig.json
+eslint.config.js
+.deepcoderc.example
+
+# Development
+*.log
+coverage/
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Tests
+__tests__/
+*.test.ts
+*.spec.ts
+
+# Misc
+*.md
+!README.md
+
