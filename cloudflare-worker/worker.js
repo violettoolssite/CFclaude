@@ -12,32 +12,27 @@
  */
 
 // 模型映射: Claude 模型 -> Cloudflare AI 模型
+// 只保留确认可用的模型
 const MODEL_MAP = {
   // Claude 请求的模型会被映射到这些 Cloudflare 模型
-  'claude-sonnet-4-20250514': '@cf/meta/llama-3-8b-instruct',
-  'claude-opus-4-20250514': '@cf/meta/llama-3-8b-instruct',
-  'claude-3-5-sonnet-20241022': '@cf/meta/llama-3-8b-instruct',
-  'claude-3-5-haiku-20241022': '@cf/meta/llama-2-7b-chat-int8',
+  'claude-sonnet-4-20250514': '@cf/meta/llama-3.1-8b-instruct',
+  'claude-opus-4-20250514': '@cf/meta/llama-3.1-8b-instruct',
+  'claude-3-5-sonnet-20241022': '@cf/meta/llama-3.1-8b-instruct',
+  'claude-3-5-haiku-20241022': '@cf/meta/llama-3.1-8b-instruct',
   
-  // Cloudflare Workers AI 免费可用模型
-  '@cf/meta/llama-3-8b-instruct': '@cf/meta/llama-3-8b-instruct',
+  // Cloudflare Workers AI 确认可用的模型
   '@cf/meta/llama-3.1-8b-instruct': '@cf/meta/llama-3.1-8b-instruct',
-  '@cf/meta/llama-2-7b-chat-int8': '@cf/meta/llama-2-7b-chat-int8',
-  '@cf/meta/llama-2-7b-chat-fp16': '@cf/meta/llama-2-7b-chat-fp16',
+  '@cf/meta/llama-3.2-3b-instruct': '@cf/meta/llama-3.2-3b-instruct',
+  '@cf/meta/llama-3.2-1b-instruct': '@cf/meta/llama-3.2-1b-instruct',
   '@cf/mistral/mistral-7b-instruct-v0.1': '@cf/mistral/mistral-7b-instruct-v0.1',
-  '@cf/mistral/mistral-7b-instruct-v0.2': '@cf/mistral/mistral-7b-instruct-v0.2',
-  '@cf/thebloke/codellama-7b-instruct-awq': '@cf/thebloke/codellama-7b-instruct-awq',
   '@cf/deepseek-ai/deepseek-math-7b-instruct': '@cf/deepseek-ai/deepseek-math-7b-instruct',
-  '@cf/qwen/qwen1.5-7b-chat-awq': '@cf/qwen/qwen1.5-7b-chat-awq',
-  '@cf/qwen/qwen1.5-14b-chat-awq': '@cf/qwen/qwen1.5-14b-chat-awq',
-  '@cf/tiiuae/falcon-7b-instruct': '@cf/tiiuae/falcon-7b-instruct',
   '@cf/openchat/openchat-3.5-0106': '@cf/openchat/openchat-3.5-0106',
-  '@cf/microsoft/phi-2': '@cf/microsoft/phi-2',
-  '@cf/google/gemma-7b-it': '@cf/google/gemma-7b-it',
+  '@cf/google/gemma-7b-it-lora': '@cf/google/gemma-7b-it-lora',
+  '@cf/qwen/qwen1.5-7b-chat-awq': '@cf/qwen/qwen1.5-7b-chat-awq',
 };
 
 // 默认模型
-const DEFAULT_MODEL = '@cf/meta/llama-3-8b-instruct';
+const DEFAULT_MODEL = '@cf/meta/llama-3.1-8b-instruct';
 
 export default {
   async fetch(request, env) {

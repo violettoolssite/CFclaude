@@ -99,7 +99,7 @@ wrangler deploy
 
 ### 方法一：使用 CFclaude 工具（推荐）
 
-1. 下载 `release/CFclaude.exe`
+1. 从 [Releases](https://github.com/violettoolssite/CFclaude/releases) 下载 `CFclaude.exe`
 2. 运行程序
 3. 选择 **Cloudflare Worker 代理**
 4. 输入你的 Worker URL
@@ -141,20 +141,17 @@ claude
 
 ## 可用模型
 
-以下是 Cloudflare Workers AI 免费可用的文本生成模型：
+以下是 Cloudflare Workers AI 确认可用的文本生成模型：
 
 | 模型 | 参数量 | 说明 |
 |------|--------|------|
-| `@cf/meta/llama-3-8b-instruct` | 8B | **推荐** - Llama 3，综合能力强 |
-| `@cf/meta/llama-3.1-8b-instruct` | 8B | Llama 3.1，更新版本 |
-| `@cf/meta/llama-2-7b-chat-int8` | 7B | Llama 2 量化版，速度快 |
-| `@cf/mistral/mistral-7b-instruct-v0.2` | 7B | Mistral，推理能力好 |
-| `@cf/qwen/qwen1.5-14b-chat-awq` | 14B | 通义千问，中文友好 |
+| `@cf/meta/llama-3.1-8b-instruct` | 8B | **推荐** - Llama 3.1，综合能力强 |
+| `@cf/meta/llama-3.2-3b-instruct` | 3B | Llama 3.2，速度快 |
+| `@cf/meta/llama-3.2-1b-instruct` | 1B | Llama 3.2，最快速度 |
+| `@cf/mistral/mistral-7b-instruct-v0.1` | 7B | Mistral，推理能力好 |
 | `@cf/deepseek-ai/deepseek-math-7b-instruct` | 7B | DeepSeek，数学能力强 |
-| `@cf/thebloke/codellama-7b-instruct-awq` | 7B | CodeLlama，代码专用 |
 | `@cf/openchat/openchat-3.5-0106` | 7B | OpenChat，对话优化 |
-| `@cf/google/gemma-7b-it` | 7B | Google Gemma |
-| `@cf/microsoft/phi-2` | 2.7B | 微软 Phi-2，小巧高效 |
+| `@cf/qwen/qwen1.5-7b-chat-awq` | 7B | 通义千问，中文友好 |
 
 ### 在 Claude Code 中切换模型
 
@@ -224,9 +221,8 @@ CFclaude/
 │   ├── worker.js       # Cloudflare Worker 代码
 │   ├── wrangler.toml   # Wrangler 配置文件
 │   └── README.md       # Worker 说明
-├── release/
-│   └── CFclaude.exe    # Windows 配置工具
-└── README.md           # 本文档
+├── README.md           # 本文档
+└── Releases            # CFclaude.exe 在 GitHub Releases 下载
 ```
 
 ## 许可证
