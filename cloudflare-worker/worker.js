@@ -195,17 +195,28 @@ function buildMessages(body) {
 
 // 非流式请求
 async function handleNonStreamRequest(ai, model, messages, originalBody) {
-  // 构建 prompt 字符串 (Cloudflare AI 支持 prompt 或 messages 格式)
-  const prompt = buildPromptString(messages);
+  let responseText = '';
   
-  const result = await ai.run(model, {
-    prompt: prompt,
-    max_tokens: Math.min(originalBody.max_tokens || 2048, 4096),
-    temperature: originalBody.temperature ?? 0.7,
-    stream: false
-  });
-
-  const responseText = result.response || result || '';
+  try {
+    // 尝试使用 messages 格式 (聊天模型)
+    const result = await ai.run(model, {
+      messages: messages,
+      max_tokens: Math.min(originalBody.max_tokens || 2048, 4096),
+    });
+    responseText = result.response || (typeof result === 'string' ? result : JSON.stringify(result));
+  } catch (e1) {
+    try {
+      // 如果失败，尝试使用 prompt 格式
+      const prompt = buildPromptString(messages);
+      const result = await ai.run(model, {
+        prompt: prompt,
+        max_tokens: Math.min(originalBody.max_tokens || 2048, 4096),
+      });
+      responseText = result.response || (typeof result === 'string' ? result : JSON.stringify(result));
+    } catch (e2) {
+      return errorResponse(`Model error: ${e1.message || e2.message}`, 500);
+    }
+  }
 
   const anthropicResponse = {
     id: `msg_${Date.now()}`,
@@ -229,15 +240,28 @@ async function handleNonStreamRequest(ai, model, messages, originalBody) {
 
 // 流式请求
 async function handleStreamRequest(ai, model, messages, originalBody) {
-  // 构建 prompt 字符串
-  const prompt = buildPromptString(messages);
+  let stream;
   
-  const stream = await ai.run(model, {
-    prompt: prompt,
-    max_tokens: Math.min(originalBody.max_tokens || 2048, 4096),
-    temperature: originalBody.temperature ?? 0.7,
-    stream: true
-  });
+  try {
+    // 尝试使用 messages 格式
+    stream = await ai.run(model, {
+      messages: messages,
+      max_tokens: Math.min(originalBody.max_tokens || 2048, 4096),
+      stream: true
+    });
+  } catch (e1) {
+    try {
+      // 如果失败，尝试使用 prompt 格式
+      const prompt = buildPromptString(messages);
+      stream = await ai.run(model, {
+        prompt: prompt,
+        max_tokens: Math.min(originalBody.max_tokens || 2048, 4096),
+        stream: true
+      });
+    } catch (e2) {
+      return errorResponse(`Model error: ${e1.message || e2.message}`, 500);
+    }
+  }
 
   const messageId = `msg_${Date.now()}`;
   
