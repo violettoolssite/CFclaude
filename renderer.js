@@ -90,18 +90,39 @@ async function loadCurrentConfig() {
   
   if (config.baseUrl) {
     let providerName = '未知';
+    let providerUrl = '';
+    
+    // 先检查是否匹配预设提供商
     for (const [key, p] of Object.entries(providers)) {
-      if (config.baseUrl === p.baseUrl) {
+      if (p.baseUrl && config.baseUrl === p.baseUrl) {
         providerName = p.name;
         break;
       }
     }
-    statusEl.innerHTML = `
-      <div>提供商: <strong>${providerName}</strong></div>
-      <div style="color: #888; font-size: 13px; margin-top: 4px;">模型: ${config.model || '未设置'}</div>
-    `;
+    
+    // 如果未匹配，检测是否是 Cloudflare Worker
+    if (providerName === '未知') {
+      if (config.baseUrl.includes('.workers.dev') || 
+          config.baseUrl.includes('cloudflare') ||
+          config.baseUrl.includes('cf-')) {
+        providerName = 'Cloudflare Worker 代理';
+        providerUrl = config.baseUrl;
+      } else {
+        // 自定义 API
+        providerName = '自定义 API';
+        providerUrl = config.baseUrl;
+      }
+    }
+    
+    let html = `<div>提供商: <strong>${providerName}</strong></div>`;
+    if (providerUrl) {
+      html += `<div style="color: #6e7681; font-size: 11px; margin-top: 2px;">${providerUrl}</div>`;
+    }
+    html += `<div style="color: #8b949e; font-size: 12px; margin-top: 4px;">模型: ${config.model || '未设置'}</div>`;
+    
+    statusEl.innerHTML = html;
   } else {
-    statusEl.innerHTML = '<div style="color: #888;">未配置 (使用官方 Anthropic)</div>';
+    statusEl.innerHTML = '<div style="color: #8b949e;">未配置 (使用官方 Anthropic)</div>';
   }
 }
 

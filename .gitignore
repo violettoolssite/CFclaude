@@ -3,3 +3,12 @@ dist/
 *.log
 .DS_Store
 Thumbs.db
+package-lock.json
+
+# Electron 源文件 (只保留构建后的 exe)
+main.js
+renderer.js
+index.html
+styles.css
+.deepcoderc.example
+.npmignore
