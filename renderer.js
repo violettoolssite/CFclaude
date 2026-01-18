@@ -12,11 +12,9 @@ const PROVIDERS = {
   },
   doubao: {
     name: '豆包',
-    baseUrl: 'https://ark.cn-beijing.volces.com/api/compatible',
+    baseUrl: 'https://ark.cn-beijing.volces.com/api/coding',
     models: [
-      { id: 'doubao-seed-code-preview-251028', name: 'Doubao Seed Code (推荐)' },
-      { id: 'doubao-1.5-pro-256k', name: 'Doubao 1.5 Pro 256K' },
-      { id: 'doubao-1.5-pro-32k', name: 'Doubao 1.5 Pro 32K' }
+      { id: 'doubao-seed-code-preview-251028', name: 'Doubao Seed Code (推荐)' }
     ]
   },
   kimi: {
@@ -419,17 +417,22 @@ function selectProvider(providerId) {
   
   // 更新模型列表
   const modelSelect = document.getElementById('model-select');
-  modelSelect.innerHTML = provider.models.map(m => 
+  // 添加预设模型和自定义模型选项
+  let modelOptions = provider.models.map(m => 
     `<option value="${m.id}">${m.name}</option>`
   ).join('');
+  modelOptions += '<option value="__custom__">-- 自定义模型 --</option>';
+  modelSelect.innerHTML = modelOptions;
   
   // 显示/隐藏特有配置
   const cfConfig = document.getElementById('cloudflare-config');
   const apiKeyGroup = document.getElementById('api-key-group');
+  const customModelGroup = document.getElementById('custom-model-group');
   
   cfConfig.style.display = 'none';
   apiKeyGroup.style.display = 'block';
   apiKeyGroup.querySelector('label').textContent = 'API Key';
+  customModelGroup.style.display = 'none';
   
   if (providerId === 'cloudflare') {
     cfConfig.style.display = 'block';
@@ -438,6 +441,15 @@ function selectProvider(providerId) {
     apiKeyGroup.style.display = 'block';
     apiKeyGroup.querySelector('label').textContent = 'Anthropic API Key';
   }
+  
+  // 监听模型选择变化，显示/隐藏自定义模型输入框
+  modelSelect.onchange = function() {
+    if (this.value === '__custom__') {
+      customModelGroup.style.display = 'block';
+    } else {
+      customModelGroup.style.display = 'none';
+    }
+  };
 }
 
 function cleanUrl(url) {
@@ -457,8 +469,18 @@ async function applyConfig() {
   }
   
   const provider = PROVIDERS[currentProvider];
-  const model = document.getElementById('model-select').value;
+  let model = document.getElementById('model-select').value;
   const apiKey = document.getElementById('api-key').value;
+  
+  // 如果选择了自定义模型，使用自定义模型输入框的值
+  if (model === '__custom__') {
+    const customModel = document.getElementById('custom-model').value.trim();
+    if (!customModel) {
+      showMessage('请输入自定义模型 ID', 'error');
+      return;
+    }
+    model = customModel;
+  }
   let gateway = document.getElementById('unified-gateway').value;
   gateway = cleanUrl(gateway);
   
