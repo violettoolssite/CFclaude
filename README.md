@@ -6,7 +6,6 @@ Claude Code 多模型切换工具 - 一键配置多个 AI 服务商
 
 CFclaude 是一款 Windows 桌面工具，用于快速切换 Claude Code 的 AI 后端服务商。无需手动编辑环境变量，通过图形界面即可完成配置。
 
-桌面工具不开源，仅提供可执行文件下载。Cloudflare Worker 代码完全开源。
 
 ## 支持的服务商
 
@@ -117,6 +116,4 @@ CFclaude/
 
 ## 许可证
 
-Cloudflare Worker 代码采用 MIT License。
-
-桌面工具为闭源软件。
+MIT License
