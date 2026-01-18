@@ -4,12 +4,13 @@ release/
 *.log
 .DS_Store
 Thumbs.db
-package-lock.json
 
-# Electron 源文件
+# 桌面软件源码（不开源）
 main.js
 renderer.js
 index.html
 styles.css
+package.json
+package-lock.json
 .deepcoderc.example
 .npmignore

@@ -4,7 +4,7 @@ Claude Code 多模型切换工具 - 一键配置 8 大 AI 服务商
 
 ## 更新日志
 
-### v2.0.0 (2026-01-18)
+### v1.0.0 (2026-01-18)
 
 #### 新增功能
 
@@ -146,17 +146,15 @@ CFclaude 工具会自动设置以下用户级环境变量：
 
 ```
 CFclaude/
-├── cloudflare-worker/
-│   ├── worker.js       # Cloudflare Worker 代码
-│   ├── wrangler.toml   # Wrangler 配置
-│   └── README.md       # Worker 说明
-├── main.js             # Electron 主进程
-├── index.html          # 界面
-├── styles.css          # 样式
-├── renderer.js         # 渲染进程
-├── package.json        # 项目配置
-└── README.md           # 本文档
+├── cloudflare-worker/      # 开源 - Cloudflare Worker 代码
+│   ├── worker.js           # Worker 源码
+│   ├── wrangler.toml       # Wrangler 配置
+│   └── README.md           # Worker 说明
+├── README.md               # 本文档
+└── Releases/               # CFclaude.exe (从 GitHub Releases 下载)
 ```
+
+**注意：** CFclaude 桌面工具不开源，仅提供可执行文件下载。Cloudflare Worker 代码完全开源。
 
 ## 相关资源
 
