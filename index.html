@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CFclaude</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>CFclaude</h1>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-title">配置</div>
+          <button class="sidebar-btn active" data-view="config">模型配置</button>
+        </div>
+        <div class="nav-section">
+          <div class="nav-title">工具</div>
+          <button class="sidebar-btn" data-view="install-claude">安装 Claude Code</button>
+          <button class="sidebar-btn" data-view="install-node">下载 Node.js</button>
+        </div>
+        <div class="nav-section">
+          <div class="nav-title">获取 API Key</div>
+          <button class="sidebar-btn" data-view="api-deepseek">DeepSeek</button>
+          <button class="sidebar-btn" data-view="api-doubao">豆包</button>
+          <button class="sidebar-btn" data-view="api-kimi">Kimi</button>
+          <button class="sidebar-btn" data-view="api-qwen">通义千问</button>
+          <button class="sidebar-btn" data-view="api-zhipu">智谱AI</button>
+          <button class="sidebar-btn" data-view="api-modelscope">ModelScope</button>
+          <button class="sidebar-btn" data-view="api-cloudflare">Cloudflare</button>
+          <button class="sidebar-btn" data-view="api-anthropic">Anthropic</button>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="version">v1.0.0</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <!-- 模型配置视图 -->
+      <div id="view-config" class="view active">
+        <header class="main-header">
+          <h2>模型配置</h2>
+          <p class="subtitle">一键切换 Claude Code 后端服务商</p>
+        </header>
+
+        <div class="content-grid">
+          <section class="card status-card">
+            <h3>当前配置</h3>
+            <div class="status-list">
+              <div class="status-row">
+                <span class="status-label">服务商</span>
+                <span id="current-provider" class="status-value">-</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">模型</span>
+                <span id="current-model" class="status-value">-</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="card gateway-card">
+            <h3>统一网关</h3>
+            <input type="text" id="unified-gateway" class="input-field" placeholder="留空使用服务商默认地址">
+          </section>
+        </div>
+
+        <section class="provider-section">
+          <h3>选择服务商</h3>
+          <div class="provider-grid">
+            <button class="provider-btn" data-provider="deepseek">DeepSeek</button>
+            <button class="provider-btn" data-provider="doubao">豆包</button>
+            <button class="provider-btn" data-provider="kimi">Kimi</button>
+            <button class="provider-btn" data-provider="qwen">通义千问</button>
+            <button class="provider-btn" data-provider="zhipu">智谱AI</button>
+            <button class="provider-btn" data-provider="modelscope">ModelScope</button>
+            <button class="provider-btn" data-provider="cloudflare">Cloudflare</button>
+            <button class="provider-btn" data-provider="anthropic">Anthropic</button>
+          </div>
+        </section>
+
+        <section id="config-section" class="config-section" style="display: none;">
+          <div class="config-grid">
+            <div class="form-group">
+              <label>选择模型</label>
+              <select id="model-select" class="input-field"></select>
+            </div>
+            <div id="api-key-group" class="form-group">
+              <label>API Key</label>
+              <input type="password" id="api-key" class="input-field" placeholder="输入 API Key">
+            </div>
+            <div id="cloudflare-config" class="form-group" style="display: none;">
+              <label>Worker URL</label>
+              <input type="text" id="cf-worker-url" class="input-field" placeholder="https://your-worker.workers.dev">
+            </div>
+          </div>
+          <div class="action-buttons">
+            <button id="apply-btn" class="btn-primary">应用配置</button>
+            <button id="clear-btn" class="btn-secondary">清除配置</button>
+          </div>
+        </section>
+
+        <div id="message" class="message"></div>
+      </div>
+
+      <!-- 安装 Claude Code 视图 -->
+      <div id="view-install-claude" class="view">
+        <header class="main-header">
+          <h2>安装 Claude Code</h2>
+          <p class="subtitle">通过 npm 全局安装 Claude Code CLI 工具</p>
+        </header>
+        <div class="info-card">
+          <h3>安装说明</h3>
+          <p>Claude Code 是 Anthropic 官方推出的命令行 AI 编程助手。</p>
+          <p>安装命令：<code>npm install -g @anthropic-ai/claude-code</code></p>
+          <p>安装前请确保已安装 Node.js 18 或更高版本。</p>
+        </div>
+        <button id="install-claude-btn" class="btn-primary btn-large">开始安装</button>
+        <div id="install-message" class="message"></div>
+      </div>
+
+      <!-- 下载 Node.js 视图 -->
+      <div id="view-install-node" class="view">
+        <header class="main-header">
+          <h2>下载 Node.js</h2>
+          <p class="subtitle">安装 Node.js 运行环境</p>
+        </header>
+        <div class="info-card">
+          <h3>安装说明</h3>
+          <p>Node.js 是运行 Claude Code 的必要环境。</p>
+          <p>推荐版本：v24.13.0 (LTS)</p>
+          <p>点击下方按钮将下载 Windows x64 安装包。</p>
+        </div>
+        <button id="download-node-btn" class="btn-primary btn-large">下载 Node.js</button>
+      </div>
+
+      <!-- API 信息视图模板 -->
+      <div id="view-api-deepseek" class="view">
+        <header class="main-header">
+          <h2>DeepSeek</h2>
+          <p class="subtitle">国产首选，编程能力强</p>
+        </header>
+        <div class="info-card">
+          <h3>平台信息</h3>
+          <p>DeepSeek 是国内领先的 AI 模型提供商，提供高性价比的编程模型。</p>
+          <p>推荐模型：deepseek-chat、deepseek-coder、deepseek-reasoner</p>
+          <p>API 地址：api.deepseek.com</p>
+        </div>
+        <button class="btn-primary btn-large" data-url="https://platform.deepseek.com/">前往获取 API Key</button>
+      </div>
+
+      <div id="view-api-doubao" class="view">
+        <header class="main-header">
+          <h2>豆包</h2>
+          <p class="subtitle">字节跳动，视觉理解，性价比高</p>
+        </header>
+        <div class="info-card">
+          <h3>平台信息</h3>
+          <p>豆包是字节跳动推出的 AI 模型，原生兼容 Claude Code。</p>
+          <p>推荐模型：doubao-seed-code</p>
+          <p>API 地址：ark.cn-beijing.volces.com</p>
+        </div>
+        <button class="btn-primary btn-large" data-url="https://console.volcengine.com/ark/">前往获取 API Key</button>
+      </div>
+
+      <div id="view-api-kimi" class="view">
+        <header class="main-header">
+          <h2>Kimi</h2>
+          <p class="subtitle">月之暗面，超长上下文 128K</p>
+        </header>
+        <div class="info-card">
+          <h3>平台信息</h3>
+          <p>Kimi 由月之暗面开发，支持超长上下文。</p>
+          <p>推荐模型：kimi-k2</p>
+          <p>API 地址：api.moonshot.cn</p>
+        </div>
+        <button class="btn-primary btn-large" data-url="https://platform.moonshot.cn/">前往获取 API Key</button>
+      </div>
+
+      <div id="view-api-qwen" class="view">
+        <header class="main-header">
+          <h2>通义千问</h2>
+          <p class="subtitle">阿里云，编程专用模型</p>
+        </header>
+        <div class="info-card">
+          <h3>平台信息</h3>
+          <p>通义千问是阿里云推出的大语言模型，Qwen3-Coder 专为编程优化。</p>
+          <p>推荐模型：qwen3-coder</p>
+          <p>API 地址：dashscope.aliyuncs.com</p>
+        </div>
+        <button class="btn-primary btn-large" data-url="https://dashscope.console.aliyun.com/">前往获取 API Key</button>
+      </div>
+
+      <div id="view-api-zhipu" class="view">
+        <header class="main-header">
+          <h2>智谱AI</h2>
+          <p class="subtitle">稳定可靠，中文优化</p>
+        </header>
+        <div class="info-card">
+          <h3>平台信息</h3>
+          <p>智谱AI 提供 GLM 系列模型，中文表现优秀。</p>
+          <p>推荐模型：glm-4.7</p>
+          <p>API 地址：open.bigmodel.cn</p>
+        </div>
+        <button class="btn-primary btn-large" data-url="https://open.bigmodel.cn/">前往获取 API Key</button>
+      </div>
+
+      <div id="view-api-modelscope" class="view">
+        <header class="main-header">
+          <h2>ModelScope</h2>
+          <p class="subtitle">魔搭社区，部分免费</p>
+        </header>
+        <div class="info-card">
+          <h3>平台信息</h3>
+          <p>ModelScope 是阿里达摩院开源的模型社区。</p>
+          <p>推荐模型：Qwen2.5-72B-Instruct</p>
+          <p>API 地址：api-inference.modelscope.cn</p>
+        </div>
+        <button class="btn-primary btn-large" data-url="https://modelscope.cn/">前往获取 API Key</button>
+      </div>
+
+      <div id="view-api-cloudflare" class="view">
+        <header class="main-header">
+          <h2>Cloudflare</h2>
+          <p class="subtitle">完全免费，需部署 Worker</p>
+        </header>
+        <div class="info-card">
+          <h3>部署配置</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Account ID</label>
+              <input type="text" id="cf-account-id" class="input-field" placeholder="输入 Account ID">
+            </div>
+            <div class="form-group">
+              <label>API Token</label>
+              <input type="password" id="cf-api-token" class="input-field" placeholder="输入 API Token">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Worker 名称</label>
+              <input type="text" id="cf-worker-name" class="input-field" value="claude-ai-proxy" placeholder="Worker 名称">
+            </div>
+            <div class="form-group">
+              <label>子域 (subdomain)</label>
+              <input type="text" id="cf-subdomain" class="input-field" value="violetqqcom" placeholder="你的子域">
+            </div>
+          </div>
+          <p class="hint">部署后 Worker URL: https://[worker名称].[子域].workers.dev</p>
+        </div>
+        <div class="button-row">
+          <button id="deploy-worker-btn" class="btn-primary btn-large">一键部署 Worker</button>
+          <button class="btn-secondary btn-large" data-url="https://dash.cloudflare.com/">手动部署</button>
+        </div>
+        <div id="cf-deploy-status" class="deploy-status" style="display: none;"></div>
+        <div id="cf-url-display" class="url-display" style="display: none;">
+          <label>Worker URL (点击复制)</label>
+          <input type="text" id="cf-deployed-url" class="url-input" readonly>
+        </div>
+      </div>
+
+      <div id="view-api-anthropic" class="view">
+        <header class="main-header">
+          <h2>Anthropic</h2>
+          <p class="subtitle">官方 Claude API</p>
+        </header>
+        <div class="info-card">
+          <h3>平台信息</h3>
+          <p>Anthropic 官方 API，提供最佳的 Claude 体验。</p>
+          <p>推荐模型：claude-sonnet-4、claude-opus-4</p>
+          <p>需要有效订阅或 API 额度。</p>
+        </div>
+        <button class="btn-primary btn-large" data-url="https://console.anthropic.com/">前往获取 API Key</button>
+      </div>
+    </main>
+
+    <aside class="history-sidebar">
+      <div class="history-header">
+        <h3>历史配置</h3>
+        <button id="clear-history-btn" class="btn-icon" title="清空历史">×</button>
+      </div>
+      <div id="history-list" class="history-list">
+        <p class="history-empty">暂无历史配置</p>
+      </div>
+    </aside>
+  </div>
+
+  <!-- 确认模态框 -->
+  <div id="confirm-modal" class="modal">
+    <div class="modal-content">
+      <h3>切换配置</h3>
+      <p id="modal-message">确定要切换到此配置吗？</p>
+      <div class="modal-details" id="modal-details"></div>
+      <div class="modal-actions">
+        <button id="modal-cancel" class="btn-secondary">取消</button>
+        <button id="modal-confirm" class="btn-primary">确认切换</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 加载遮罩 -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <p id="loading-text">处理中...</p>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

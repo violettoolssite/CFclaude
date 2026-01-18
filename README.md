@@ -119,11 +119,29 @@ CFclaude 是一款 Windows 桌面工具，用于快速切换 Claude Code 的 AI 
 
 ```
 CFclaude/
+├── main.js              # Electron 主进程
+├── renderer.js          # 渲染进程
+├── index.html           # 界面
+├── styles.css           # 样式
+├── package.json         # 项目配置
 ├── cloudflare-worker/
 │   ├── worker.js
 │   ├── wrangler.toml
 │   └── README.md
 └── README.md
+```
+
+## 开发
+
+```bash
+# 安装依赖
+npm install
+
+# 运行开发
+npm start
+
+# 构建
+npm run build
 ```
 
 ## 相关资源
