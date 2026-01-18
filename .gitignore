@@ -24,3 +24,5 @@ icon.png
 .deepcoderc.example
 .npmignore
 create-icon.js
+
+cloudflare-worker/ai-gateway.js

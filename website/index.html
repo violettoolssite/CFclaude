@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CFclaude - Claude Code 多模型切换工具</title>
+  <meta name="description" content="一键切换 Claude Code 后端，支持 DeepSeek、Kimi、豆包、通义千问等 8 大 AI 服务商">
+  <meta name="keywords" content="Claude Code, DeepSeek, Kimi, 豆包, AI, 编程助手">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 背景动画 -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+
+  <!-- 导航 -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="#" class="nav-logo">
+        <span class="logo-text">CFclaude</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">功能</a>
+        <a href="#providers">服务商</a>
+        <a href="#download">下载</a>
+        <a href="#guide">使用指南</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 主视觉区 -->
+  <header class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">Windows 桌面工具</div>
+      <h1 class="hero-title">
+        <span class="title-line">Claude Code</span>
+        <span class="title-highlight">多模型切换器</span>
+      </h1>
+      <p class="hero-desc">
+        一键切换 Claude Code 后端服务商<br>
+        支持 <span class="highlight">DeepSeek</span>、<span class="highlight">Kimi</span>、<span class="highlight">豆包</span> 等 8 大 AI 平台
+      </p>
+      <div class="hero-buttons">
+        <a href="#download" class="btn-primary">
+          立即下载
+        </a>
+        <a href="#guide" class="btn-secondary">
+          使用指南
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-number">8</span>
+          <span class="stat-label">支持服务商</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">20+</span>
+          <span class="stat-label">可用模型</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">Free</span>
+          <span class="stat-label">开源工具</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="app-preview">
+        <div class="preview-header">
+          <div class="preview-dots">
+            <span></span><span></span><span></span>
+          </div>
+          <span class="preview-title">CFclaude</span>
+        </div>
+        <div class="preview-content">
+          <div class="preview-sidebar">
+            <div class="preview-item active">模型配置</div>
+            <div class="preview-item">DeepSeek</div>
+            <div class="preview-item">Kimi</div>
+            <div class="preview-item">豆包</div>
+          </div>
+          <div class="preview-main">
+            <div class="preview-card">
+              <span class="card-label">当前服务商</span>
+              <span class="card-value">DeepSeek</span>
+            </div>
+            <div class="preview-providers">
+              <span class="provider active">DeepSeek</span>
+              <span class="provider">Kimi</span>
+              <span class="provider">豆包</span>
+              <span class="provider">通义千问</span>
+            </div>
+            <div class="preview-btn">应用配置</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 功能特点 -->
+  <section id="features" class="section features">
+    <div class="container">
+      <h2 class="section-title">核心功能</h2>
+      <p class="section-desc">为 Claude Code 用户打造的多模型管理工具</p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">[1]</div>
+          <h3>一键切换</h3>
+          <p>无需手动配置环境变量，点击即可切换不同的 AI 服务商</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">[2]</div>
+          <h3>配置记忆</h3>
+          <p>自动保存历史配置，随时恢复到之前使用的服务商和模型</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">[3]</div>
+          <h3>Cloudflare 部署</h3>
+          <p>内置 Cloudflare Worker 一键部署，免费使用 Workers AI</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">[4]</div>
+          <h3>安全存储</h3>
+          <p>API Key 存储在本地系统环境变量，不上传到任何服务器</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">[5]</div>
+          <h3>统一网关</h3>
+          <p>支持自定义 API 网关，方便企业用户使用内部代理</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">[6]</div>
+          <h3>便携运行</h3>
+          <p>单文件便携版，无需安装，下载即用</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 支持的服务商 -->
+  <section id="providers" class="section providers">
+    <div class="container">
+      <h2 class="section-title">支持的服务商</h2>
+      <p class="section-desc">接入 8 大主流 AI 平台，总有一款适合你</p>
+      <div class="providers-grid">
+        <div class="provider-card recommended">
+          <div class="provider-badge">推荐</div>
+          <h3>DeepSeek</h3>
+          <p>国产首选，编程能力强</p>
+          <ul class="provider-features">
+            <li>原生 Anthropic API 支持</li>
+            <li>deepseek-chat / reasoner</li>
+            <li>价格实惠</li>
+          </ul>
+        </div>
+        <div class="provider-card recommended">
+          <div class="provider-badge">推荐</div>
+          <h3>Kimi</h3>
+          <p>月之暗面，超长上下文</p>
+          <ul class="provider-features">
+            <li>原生 Anthropic API 支持</li>
+            <li>128K 超长上下文</li>
+            <li>kimi-k2 模型</li>
+          </ul>
+        </div>
+        <div class="provider-card">
+          <h3>豆包</h3>
+          <p>字节跳动，性价比高</p>
+          <ul class="provider-features">
+            <li>原生支持 Claude Code</li>
+            <li>视觉理解能力</li>
+            <li>doubao-seed-code</li>
+          </ul>
+        </div>
+        <div class="provider-card">
+          <h3>通义千问</h3>
+          <p>阿里云，编程专用</p>
+          <ul class="provider-features">
+            <li>Qwen3-Coder 编程模型</li>
+            <li>阿里云生态</li>
+            <li>企业级服务</li>
+          </ul>
+        </div>
+        <div class="provider-card">
+          <h3>智谱AI</h3>
+          <p>GLM 系列，中文优化</p>
+          <ul class="provider-features">
+            <li>GLM-4.7 最新模型</li>
+            <li>中文表现优秀</li>
+            <li>稳定可靠</li>
+          </ul>
+        </div>
+        <div class="provider-card">
+          <h3>Cloudflare</h3>
+          <p>完全免费，需部署 Worker</p>
+          <ul class="provider-features">
+            <li>Workers AI 免费额度</li>
+            <li>一键部署</li>
+            <li>Llama / Mistral 模型</li>
+          </ul>
+        </div>
+        <div class="provider-card">
+          <h3>Anthropic</h3>
+          <p>官方 Claude API</p>
+          <ul class="provider-features">
+            <li>Claude Sonnet 4</li>
+            <li>Claude Opus 4</li>
+            <li>原版体验</li>
+          </ul>
+        </div>
+        <div class="provider-card warning">
+          <div class="provider-badge warning">Beta</div>
+          <h3>ModelScope</h3>
+          <p>魔搭社区，兼容性待完善</p>
+          <ul class="provider-features">
+            <li>Anthropic API Beta</li>
+            <li>max_tokens 限制</li>
+            <li>暂不推荐</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 下载区域 -->
+  <section id="download" class="section download">
+    <div class="container">
+      <h2 class="section-title">立即下载</h2>
+      <p class="section-desc">Windows 便携版，下载即用，无需安装</p>
+      <div class="download-card">
+        <div class="download-info">
+          <div class="download-icon">CF</div>
+          <div class="download-details">
+            <h3>CFclaude v1.0.0</h3>
+            <p>Windows x64 便携版 | 约 80MB</p>
+            <div class="download-meta">
+              <span>2026-01-18</span>
+              <span>Electron</span>
+              <span>开源免费</span>
+            </div>
+          </div>
+        </div>
+        <div class="download-buttons">
+          <a href="https://github.com/violettoolssite/CFclaude/releases/download/1.0.0/CFclaude.1.0.0.exe" class="btn-download">
+            下载 EXE
+          </a>
+          <a href="https://github.com/violettoolssite/CFclaude/releases" class="btn-github" target="_blank">
+            所有版本
+          </a>
+        </div>
+      </div>
+      <div class="download-note">
+        <p>提示：首次运行可能会被 Windows Defender 拦截，请点击"更多信息" - "仍要运行"</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 使用指南 -->
+  <section id="guide" class="section guide">
+    <div class="container">
+      <h2 class="section-title">使用指南</h2>
+      <p class="section-desc">三步开始使用 Claude Code</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>安装 Node.js 和 Claude Code</h3>
+            <p>下载并安装 Node.js 18+，然后运行以下命令安装 Claude Code：</p>
+            <div class="code-block">
+              <code>npm install -g @anthropic-ai/claude-code</code>
+              <button class="copy-btn" onclick="copyCode(this)">复制</button>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>获取 API Key</h3>
+            <p>前往你选择的服务商平台注册并获取 API Key：</p>
+            <div class="api-links">
+              <a href="https://platform.deepseek.com/" target="_blank">DeepSeek</a>
+              <a href="https://platform.moonshot.cn/" target="_blank">Kimi</a>
+              <a href="https://console.volcengine.com/ark/" target="_blank">豆包</a>
+              <a href="https://dashscope.console.aliyun.com/" target="_blank">通义千问</a>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>配置并使用</h3>
+            <p>打开 CFclaude，选择服务商，输入 API Key，点击"应用配置"。然后在终端中运行：</p>
+            <div class="code-block">
+              <code>claude</code>
+              <button class="copy-btn" onclick="copyCode(this)">复制</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <span class="logo-text">CFclaude</span>
+        </div>
+        <p class="footer-desc">Claude Code 多模型切换工具 - 开源免费</p>
+        <div class="footer-links">
+          <a href="https://github.com/violettoolssite/CFclaude" target="_blank">GitHub</a>
+          <span class="divider">|</span>
+          <a href="#download">下载</a>
+          <span class="divider">|</span>
+          <a href="#guide">使用指南</a>
+        </div>
+        <p class="footer-copyright">2026 CFclaude. MIT License.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
