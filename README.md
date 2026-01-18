@@ -1,34 +1,75 @@
 # CFclaude
 
-Claude Code 模型切换工具 - 让 Claude Code 使用多种 AI 服务商。
+Claude Code 多模型切换工具 - 一键配置 8 大 AI 服务商
+
+## 更新日志
+
+### v2.0.0 (2026-01-18)
+
+#### 新增功能
+
+- **8 大 AI 服务商支持**
+  - DeepSeek - 国产首选，编程能力强
+  - 豆包 (Doubao) - 字节跳动，视觉理解，性价比高
+  - Kimi - 月之暗面，超长上下文
+  - 通义千问 - 阿里云 DashScope，Qwen3-Coder
+  - 智谱AI - GLM-4.7，稳定可靠
+  - ModelScope - 魔搭社区免费模型
+  - Cloudflare Workers AI - 免费额度
+  - Anthropic - 官方 Claude
+
+- **统一网关功能**
+  - 支持自定义 API 网关地址
+  - 兼容 OpenRouter、OneAPI、NewAPI 等
+  - 所有服务商可通过统一网关访问
+
+- **自动配置恢复**
+  - 启动时自动读取当前配置
+  - 自动选中上次使用的服务商
+  - 自动填充模型和 Worker URL
+
+#### 界面优化
+
+- 固定窗口大小，优化布局
+- 下拉菜单样式改进，选项更清晰
+- 紧凑布局，一屏显示完整界面
+
+#### 技术改进
+
+- 使用 PowerShell 读取用户级环境变量
+- URL 自动清理（移除末尾 /v1 或 /）
+- Cloudflare Worker 支持 messages 和 prompt 双格式
+
+---
 
 ## 功能特点
 
-- 🔄 **一键切换** - 支持多个 AI 服务商快速切换
-- 🌐 **统一网关** - 支持自定义 API 网关代理
-- 🆓 **免费方案** - 支持 Cloudflare Workers AI 免费模型
-- 💾 **配置记忆** - 自动显示上次配置的模型信息
+- 🎯 **一键切换** - 图形界面快速配置 Claude Code 后端
+- 🌐 **多服务商** - 支持国内外 8 大主流 AI 服务
+- 🔗 **统一网关** - 可配置自定义 API 代理
+- 💾 **配置记忆** - 自动恢复上次配置
+- 🆓 **Cloudflare 免费** - 提供 Worker 代码实现免费使用
 
 ## 支持的服务商
 
-| 服务商 | 特点 | 费用 |
-|--------|------|------|
-| **DeepSeek** | 国产编程首选，能力强 | 付费 |
-| **豆包** | 字节跳动，视觉理解 | 付费 |
-| **Kimi** | 月之暗面，长上下文 | 付费 |
-| **通义千问** | 阿里云，Qwen3-Coder | 付费 |
-| **智谱AI** | GLM-4.7，稳定可靠 | 付费 |
-| **ModelScope** | 魔搭社区 | 付费 |
-| **Cloudflare** | Workers AI | 免费 |
-| **Anthropic** | 官方 Claude | 付费 |
+| 服务商 | API 地址 | 推荐模型 | 特点 |
+|--------|----------|----------|------|
+| DeepSeek | api.deepseek.com | deepseek-chat | 编程能力强，性价比高 |
+| 豆包 | ark.cn-beijing.volces.com | doubao-seed-code | 视觉理解，原生兼容 Claude Code |
+| Kimi | api.moonshot.cn | kimi-k2 | 超长上下文 128K |
+| 通义千问 | dashscope.aliyuncs.com | qwen3-coder | 阿里云，编程专用模型 |
+| 智谱AI | open.bigmodel.cn | glm-4.7 | 稳定可靠，中文优化 |
+| ModelScope | api-inference.modelscope.cn | Qwen2.5-72B | 魔搭社区，部分免费 |
+| Cloudflare | 自建 Worker | llama-3.1-8b | 完全免费，需部署 Worker |
+| Anthropic | 官方 | claude-sonnet-4 | 官方 API |
 
 ## 快速开始
 
-### 下载
+### 下载安装
 
 从 [Releases](https://github.com/violettoolssite/CFclaude/releases) 下载 `CFclaude.exe`
 
-### 使用
+### 使用方法
 
 1. 运行 `CFclaude.exe`
 2. （可选）填写统一网关地址
@@ -38,100 +79,68 @@ Claude Code 模型切换工具 - 让 Claude Code 使用多种 AI 服务商。
 6. 点击 **应用配置**
 7. 重启终端，运行 `claude`
 
-## 统一网关
+### 使用统一网关
 
-如果你使用 API 代理服务（如 OpenRouter、OneAPI 等），可以在 "统一网关" 输入框填入代理地址。所有服务商（除 Cloudflare 和 Anthropic）都会通过该网关访问。
+如果你有自建的 API 网关（如 OneAPI），可以：
 
-留空则使用各服务商的默认地址。
+1. 在"统一网关"输入框填写网关地址
+2. 选择任意服务商的模型
+3. 输入网关的 API Key
+4. 所有请求将通过网关转发
 
 ## Cloudflare Worker 部署
 
-如果使用 Cloudflare 免费方案，需要先部署 Worker：
-
-### 1. 创建 Worker
+### 部署步骤
 
 1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
-2. 点击 **Workers & Pages** → **Create** → **Create Worker**
-3. 取名后点击 **Deploy**
-4. 点击 **Edit code**
-5. 删除默认代码，复制 `cloudflare-worker/worker.js` 粘贴
-6. 点击 **Deploy**
-
-### 2. 绑定 AI
-
-1. 进入 Worker 的 **Settings** → **Bindings**
-2. 点击 **Add** → **Workers AI**
-3. Variable name 填写 `AI`（必须大写）
+2. 点击 **Workers & Pages** → **Create Worker**
+3. 复制 `cloudflare-worker/worker.js` 代码粘贴
 4. 点击 **Deploy**
+5. 进入 **Settings** → **Bindings**
+6. 添加 **Workers AI**，Variable name 填 `AI`
+7. 点击 **Deploy** 保存
 
-### 3. 配置
-
-在 CFclaude 工具中：
-1. 选择 **Cloudflare**
-2. 输入 Worker URL（如 `https://xxx.workers.dev`）
-3. 选择模型
-4. 应用配置
-
-## 可用模型
-
-### Cloudflare Workers AI（免费）
+### 可用模型
 
 | 模型 | 说明 |
 |------|------|
-| `@cf/meta/llama-3.1-8b-instruct` | 推荐，综合能力强 |
-| `@cf/meta/llama-3.2-3b-instruct` | 速度快 |
-| `@cf/mistral/mistral-7b-instruct-v0.1` | 推理能力好 |
-| `@cf/deepseek-ai/deepseek-math-7b-instruct` | 数学能力强 |
-| `@cf/openchat/openchat-3.5-0106` | 对话优化 |
-| `@cf/qwen/qwen1.5-7b-chat-awq` | 中文友好 |
+| @cf/meta/llama-3.1-8b-instruct | **推荐** - 综合能力强 |
+| @cf/meta/llama-3.2-3b-instruct | 速度快 |
+| @cf/mistral/mistral-7b-instruct-v0.1 | 推理能力好 |
+| @cf/deepseek-ai/deepseek-math-7b-instruct | 数学能力强 |
+| @cf/openchat/openchat-3.5-0106 | 对话优化 |
+| @cf/qwen/qwen1.5-7b-chat-awq | 中文友好 |
 
-### 其他服务商
+## 环境变量说明
 
-各服务商的模型列表已内置在工具中，选择服务商后会自动显示可用模型。
+CFclaude 工具会自动设置以下用户级环境变量：
 
-## API Key 获取
-
-| 服务商 | 获取地址 |
-|--------|----------|
-| DeepSeek | https://platform.deepseek.com/ |
-| 豆包 | https://console.volcengine.com/ark/ |
-| Kimi | https://platform.moonshot.cn/ |
-| 通义千问 | https://dashscope.console.aliyun.com/ |
-| 智谱AI | https://open.bigmodel.cn/ |
-| ModelScope | https://modelscope.cn/ |
+| 变量名 | 说明 |
+|--------|------|
+| ANTHROPIC_BASE_URL | API 服务地址 |
+| ANTHROPIC_AUTH_TOKEN | API 密钥 |
+| ANTHROPIC_MODEL | 主模型名称 |
+| ANTHROPIC_SMALL_FAST_MODEL | 快速模型名称 |
+| API_TIMEOUT_MS | 超时时间（毫秒） |
+| CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC | 禁用非必要流量 |
 
 ## 常见问题
 
-### Q: 配置后 Claude Code 无法使用
+### Q: 配置后 Claude Code 没有生效
 
-重启终端后环境变量才会生效。
+需要重启终端（或新开一个终端窗口）才能加载新的环境变量。
 
 ### Q: 出现 404 错误
 
-检查 URL 是否正确，不要包含末尾的 `/v1`。
+检查 API 地址是否正确。工具会自动移除末尾的 `/v1`，无需手动添加。
 
 ### Q: Cloudflare Worker 报错
 
-确保已绑定 Workers AI，Variable name 必须是 `AI`（大写）。
+确保在 Worker Settings → Bindings 中添加了 Workers AI，Variable name 必须是 `AI`。
 
-### Q: 清除配置
+### Q: 如何清除配置恢复官方 Claude
 
-点击 **清除配置** 按钮，Claude Code 将恢复使用官方 API。
-
-## 更新日志
-
-### v1.1.0
-
-- 新增统一网关功能
-- 新增服务商：豆包、Kimi、通义千问
-- 自动记忆上次配置
-- 优化界面布局
-- 固定窗口大小
-
-### v1.0.0
-
-- 初始版本
-- 支持 DeepSeek、智谱AI、ModelScope、Cloudflare、Anthropic
+点击"清除配置"按钮，然后重启终端。
 
 ## 项目结构
 
@@ -140,15 +149,30 @@ CFclaude/
 ├── cloudflare-worker/
 │   ├── worker.js       # Cloudflare Worker 代码
 │   ├── wrangler.toml   # Wrangler 配置
-│   └── README.md
+│   └── README.md       # Worker 说明
 ├── main.js             # Electron 主进程
 ├── index.html          # 界面
 ├── styles.css          # 样式
 ├── renderer.js         # 渲染进程
-├── package.json
-└── README.md
+├── package.json        # 项目配置
+└── README.md           # 本文档
 ```
+
+## 相关资源
+
+- [DeepSeek 开放平台](https://platform.deepseek.com/)
+- [豆包/火山引擎](https://console.volcengine.com/ark/)
+- [Kimi 开放平台](https://platform.moonshot.cn/)
+- [阿里云灵积](https://dashscope.console.aliyun.com/)
+- [智谱AI](https://open.bigmodel.cn/)
+- [ModelScope](https://modelscope.cn/)
+- [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/)
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
 
 ## 许可证
 
 MIT License
+
+## 致谢
+
+感谢所有 AI 服务提供商为开发者提供的 API 服务。
