@@ -1,17 +1,29 @@
+# 依赖和构建
 node_modules/
 dist/
 release/
+
+# 日志
 *.log
+
+# 系统文件
 .DS_Store
 Thumbs.db
 
-# 桌面软件源码（不开源）
+# 环境配置
+.env
+
+# 桌面软件源码（闭源）
 main.js
 renderer.js
 index.html
 styles.css
 package.json
 package-lock.json
+icon.ico
+icon.png
+
+# 临时文件
 .deepcoderc.example
 .npmignore
-.env
+create-icon.js

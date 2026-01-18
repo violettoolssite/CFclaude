@@ -1,11 +1,20 @@
 # CFclaude
 
-Claude Code 多模型切换工具 - 一键配置多个 AI 服务商
+Claude Code 多模型切换工具 - 支持 8 大 AI 服务商
 
 ## 简介
 
 CFclaude 是一款 Windows 桌面工具，用于快速切换 Claude Code 的 AI 后端服务商。无需手动编辑环境变量，通过图形界面即可完成配置。
 
+## 功能特性
+
+- 一键切换 Claude Code 后端服务商
+- 支持 8 大 AI 服务商
+- 统一网关功能，兼容 OpenRouter、OneAPI、NewAPI
+- Cloudflare Worker 一键部署（自动配置 AI Binding 和路由）
+- 历史配置记录，快速切换
+- 一键安装 Claude Code 和 Node.js
+- 操作状态实时反馈
 
 ## 支持的服务商
 
@@ -22,7 +31,9 @@ CFclaude 是一款 Windows 桌面工具，用于快速切换 Claude Code 的 AI 
 
 ## 下载安装
 
-从 [Releases](https://github.com/violettoolssite/CFclaude/releases) 下载 `CFclaude.exe`
+从 [Releases](https://github.com/violettoolssite/CFclaude/releases) 下载 CFclaude.exe
+
+系统要求：Windows 10/11 x64
 
 ## 使用方法
 
@@ -35,21 +46,33 @@ CFclaude 是一款 Windows 桌面工具，用于快速切换 Claude Code 的 AI 
 
 ### 统一网关
 
-支持自定义 API 网关地址，兼容 OpenRouter、OneAPI、NewAPI 等。填写统一网关地址后，所有服务商的请求将通过该网关转发。
+支持自定义 API 网关地址，兼容 OpenRouter、OneAPI、NewAPI 等。填写统一网关地址后，所有服务商（Cloudflare 和 Anthropic 除外）的请求将通过该网关转发。
+
+### 历史配置
+
+右侧历史配置栏记录最近 10 条配置，点击即可快速切换。
 
 ## Cloudflare Worker 部署
 
-如需使用免费的 Cloudflare Workers AI，需要自行部署 Worker。
+如需使用免费的 Cloudflare Workers AI，可通过软件一键部署，或手动部署。
 
-### 部署步骤
+### 一键部署
+
+1. 在软件左侧点击「Cloudflare」
+2. 输入 Account ID 和 API Token
+3. 点击「一键部署 Worker」
+4. 部署完成后复制 Worker URL
+
+### 手动部署
 
 1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
 2. 点击 Workers & Pages - Create Worker
 3. 复制 `cloudflare-worker/worker.js` 代码粘贴
 4. 点击 Deploy
 5. 进入 Settings - Bindings
-6. 添加 Workers AI，Variable name 填 `AI`
-7. 点击 Deploy 保存
+6. 添加 Workers AI，Variable name 填 AI
+7. 进入 Settings - Domains & Routes
+8. 启用 workers.dev 路由
 
 ### 可用模型
 
