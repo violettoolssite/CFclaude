@@ -67,7 +67,8 @@ ipcMain.handle('apply-config', async (event, config) => {
     commands.push(`[Environment]::SetEnvironmentVariable('ANTHROPIC_SMALL_FAST_MODEL', '${config.smallModel}', 'User')`);
   }
   
-  commands.push(`[Environment]::SetEnvironmentVariable('API_TIMEOUT_MS', '600000', 'User')`);
+  // 设置更长的超时时间 (15分钟)，ModelScope 等服务响应较慢
+  commands.push(`[Environment]::SetEnvironmentVariable('API_TIMEOUT_MS', '900000', 'User')`);
   commands.push(`[Environment]::SetEnvironmentVariable('CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC', '1', 'User')`);
   
   const script = commands.join('; ');
@@ -114,11 +115,14 @@ ipcMain.handle('clear-config', async () => {
 // 安装 Claude Code
 ipcMain.handle('install-claude-code', async () => {
   return new Promise((resolve, reject) => {
-    exec('npm install -g @anthropic-ai/claude-code', (error, stdout, stderr) => {
+    // 设置更长的超时时间 (5分钟)
+    const child = exec('npm install -g @anthropic-ai/claude-code', {
+      timeout: 300000
+    }, (error, stdout, stderr) => {
       if (error) {
         reject('安装失败: ' + error.message);
       } else {
-        resolve('Claude Code 安装成功');
+        resolve('✓ Claude Code 安装成功！请在终端中运行 claude 命令启动。');
       }
     });
   });

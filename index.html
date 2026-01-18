@@ -29,7 +29,7 @@
           <button class="sidebar-btn" data-view="api-kimi">Kimi</button>
           <button class="sidebar-btn" data-view="api-qwen">通义千问</button>
           <button class="sidebar-btn" data-view="api-zhipu">智谱AI</button>
-          <button class="sidebar-btn" data-view="api-modelscope">ModelScope</button>
+          <button class="sidebar-btn" data-view="api-modelscope">ModelScope ⚠️</button>
           <button class="sidebar-btn" data-view="api-cloudflare">Cloudflare</button>
           <button class="sidebar-btn" data-view="api-anthropic">Anthropic</button>
         </div>
@@ -76,7 +76,7 @@
             <button class="provider-btn" data-provider="kimi">Kimi</button>
             <button class="provider-btn" data-provider="qwen">通义千问</button>
             <button class="provider-btn" data-provider="zhipu">智谱AI</button>
-            <button class="provider-btn" data-provider="modelscope">ModelScope</button>
+            <button class="provider-btn" data-provider="modelscope" style="opacity: 0.6;">ModelScope ⚠️</button>
             <button class="provider-btn" data-provider="cloudflare">Cloudflare</button>
             <button class="provider-btn" data-provider="anthropic">Anthropic</button>
           </div>
@@ -141,13 +141,14 @@
       <div id="view-api-deepseek" class="view">
         <header class="main-header">
           <h2>DeepSeek</h2>
-          <p class="subtitle">国产首选，编程能力强</p>
+          <p class="subtitle">国产首选，编程能力强，原生支持 Anthropic API</p>
         </header>
         <div class="info-card">
           <h3>平台信息</h3>
-          <p>DeepSeek 是国内领先的 AI 模型提供商，提供高性价比的编程模型。</p>
-          <p>推荐模型：deepseek-chat、deepseek-coder、deepseek-reasoner</p>
-          <p>API 地址：api.deepseek.com</p>
+          <p>DeepSeek 是国内领先的 AI 模型提供商，<strong>原生兼容 Claude Code</strong>。</p>
+          <p>推荐模型：deepseek-chat（通用）、deepseek-reasoner（深度推理）</p>
+          <p>API 地址：api.deepseek.com/anthropic</p>
+          <p class="hint">注意：DeepSeek 只有 deepseek-chat 一个模型可用于 Claude Code，不支持的模型名会自动映射到 deepseek-chat。</p>
         </div>
         <button class="btn-primary btn-large" data-url="https://platform.deepseek.com/">前往获取 API Key</button>
       </div>
@@ -210,16 +211,20 @@
 
       <div id="view-api-modelscope" class="view">
         <header class="main-header">
-          <h2>ModelScope</h2>
-          <p class="subtitle">魔搭社区，部分免费</p>
+          <h2>ModelScope ⚠️</h2>
+          <p class="subtitle">魔搭社区 - 暂不推荐使用</p>
         </header>
-        <div class="info-card">
-          <h3>平台信息</h3>
-          <p>ModelScope 是阿里达摩院开源的模型社区。</p>
-          <p>推荐模型：Qwen2.5-72B-Instruct</p>
-          <p>API 地址：api-inference.modelscope.cn</p>
+        <div class="info-card" style="border-color: #ff4444;">
+          <h3 style="color: #ff4444;">⚠️ 兼容性问题</h3>
+          <p>ModelScope 的 Anthropic API 兼容接口目前处于 <strong>Beta 测试阶段</strong>，存在以下限制：</p>
+          <p style="color: #ff6666;">• max_tokens 限制为 8192，与 Claude Code 不兼容</p>
+          <p style="color: #ff6666;">• 可能出现请求中断或无响应的情况</p>
+          <p style="margin-top: 16px;"><strong>推荐替代方案：</strong></p>
+          <p style="color: #c8ff00;">✓ DeepSeek - 原生支持，编程能力强</p>
+          <p style="color: #c8ff00;">✓ Kimi - 原生支持，超长上下文</p>
+          <p style="color: #c8ff00;">✓ 豆包 - 原生支持，性价比高</p>
         </div>
-        <button class="btn-primary btn-large" data-url="https://modelscope.cn/">前往获取 API Key</button>
+        <button class="btn-secondary btn-large" data-url="https://modelscope.cn/my/myaccesstoken">仍要使用 ModelScope</button>
       </div>
 
       <div id="view-api-cloudflare" class="view">

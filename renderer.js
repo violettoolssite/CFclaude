@@ -4,16 +4,15 @@ const { ipcRenderer } = require('electron');
 const PROVIDERS = {
   deepseek: {
     name: 'DeepSeek',
-    baseUrl: 'https://api.deepseek.com',
+    baseUrl: 'https://api.deepseek.com/anthropic',
     models: [
-      { id: 'deepseek-chat', name: 'DeepSeek Chat' },
-      { id: 'deepseek-coder', name: 'DeepSeek Coder' },
-      { id: 'deepseek-reasoner', name: 'DeepSeek Reasoner' }
+      { id: 'deepseek-chat', name: 'DeepSeek Chat (推荐)' },
+      { id: 'deepseek-reasoner', name: 'DeepSeek Reasoner (推理)' }
     ]
   },
   doubao: {
     name: '豆包',
-    baseUrl: 'https://ark.cn-beijing.volces.com/api/coding',
+    baseUrl: 'https://ark.cn-beijing.volces.com/api/compatible',
     models: [
       { id: 'doubao-seed-code-preview-251028', name: 'Doubao Seed Code (推荐)' },
       { id: 'doubao-1.5-pro-256k', name: 'Doubao 1.5 Pro 256K' },
@@ -42,7 +41,7 @@ const PROVIDERS = {
   },
   qwen: {
     name: '通义千问',
-    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    baseUrl: 'https://dashscope.aliyuncs.com/api/v2/apps/claude-code-proxy',
     models: [
       { id: 'qwen3-coder', name: 'Qwen3 Coder (推荐)' },
       { id: 'qwen-max', name: 'Qwen Max' },
@@ -53,10 +52,15 @@ const PROVIDERS = {
   },
   modelscope: {
     name: 'ModelScope',
-    baseUrl: 'https://api-inference.modelscope.cn/v1',
+    baseUrl: 'https://api-inference.modelscope.cn',
+    note: '⚠️ 暂不推荐：Anthropic API 兼容性不完整，max_tokens 限制 8192',
+    notRecommended: true,
     models: [
-      { id: 'Qwen/Qwen2.5-72B-Instruct', name: 'Qwen2.5-72B' },
+      { id: 'Qwen/Qwen2.5-7B-Instruct', name: 'Qwen2.5-7B' },
+      { id: 'Qwen/Qwen2.5-14B-Instruct', name: 'Qwen2.5-14B' },
       { id: 'Qwen/Qwen2.5-32B-Instruct', name: 'Qwen2.5-32B' },
+      { id: 'Qwen/Qwen2.5-72B-Instruct', name: 'Qwen2.5-72B' },
+      { id: 'Qwen/Qwen2.5-Coder-7B-Instruct', name: 'Qwen2.5-Coder-7B' },
       { id: 'Qwen/Qwen2.5-Coder-32B-Instruct', name: 'Qwen2.5-Coder-32B' }
     ]
   },
@@ -364,14 +368,14 @@ function switchView(viewId) {
 }
 
 async function installClaudeCode() {
-  showLoading('正在安装 Claude Code...');
+  showLoading('正在安装 Claude Code，请稍候...');
   try {
     const result = await ipcRenderer.invoke('install-claude-code');
     hideLoading();
-    showMessage(result, 'success');
+    showInstallMessage(result, 'success');
   } catch (error) {
     hideLoading();
-    showMessage(error, 'error');
+    showInstallMessage(String(error), 'error');
   }
 }
 
@@ -380,10 +384,11 @@ async function downloadNodejs() {
   try {
     const result = await ipcRenderer.invoke('download-nodejs');
     hideLoading();
-    showMessage(result, 'success');
+    // 在 Node.js 页面没有 message 元素，使用 alert 或者直接忽略
+    alert('Node.js 下载已开始，请在浏览器中完成下载和安装。');
   } catch (error) {
     hideLoading();
-    showMessage(error, 'error');
+    alert('下载失败: ' + error);
   }
 }
 
@@ -517,6 +522,19 @@ function showMessage(text, type) {
   setTimeout(() => {
     msg.className = 'message';
   }, 3000);
+}
+
+// 安装页面专用消息显示
+function showInstallMessage(text, type) {
+  const msg = document.getElementById('install-message');
+  if (msg) {
+    msg.textContent = text;
+    msg.className = 'message ' + type;
+    // 保持显示更长时间
+    setTimeout(() => {
+      msg.className = 'message';
+    }, 8000);
+  }
 }
 
 // 加载状态
