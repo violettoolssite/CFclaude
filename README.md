@@ -151,7 +151,6 @@ CFclaude/
 │   ├── wrangler.toml       # Wrangler 配置
 │   └── README.md           # Worker 说明
 ├── README.md               # 本文档
-└── Releases/               # CFclaude.exe (从 GitHub Releases 下载)
 ```
 
 **注意：** CFclaude 桌面工具不开源，仅提供可执行文件下载。Cloudflare Worker 代码完全开源。
