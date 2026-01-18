@@ -135,6 +135,96 @@ ipcMain.handle('download-nodejs', async () => {
   return '正在下载 Node.js...';
 });
 
+// 安装 Qwen Code
+ipcMain.handle('install-qwen-code', async () => {
+  return new Promise((resolve, reject) => {
+    exec('npm install -g @qwen-code/qwen-code@latest', {
+      timeout: 300000
+    }, (error, stdout, stderr) => {
+      if (error) {
+        reject('安装失败: ' + error.message);
+      } else {
+        resolve('✓ Qwen Code 安装成功！请在终端中运行 qwen 命令启动。');
+      }
+    });
+  });
+});
+
+// 配置 Qwen Code 环境变量
+ipcMain.handle('config-qwen-code', async (event, config) => {
+  const commands = [];
+  
+  if (config.apiKey) {
+    commands.push(`[Environment]::SetEnvironmentVariable('OPENAI_API_KEY', '${config.apiKey}', 'User')`);
+  }
+  if (config.baseUrl) {
+    commands.push(`[Environment]::SetEnvironmentVariable('OPENAI_BASE_URL', '${config.baseUrl}', 'User')`);
+  }
+  if (config.model) {
+    commands.push(`[Environment]::SetEnvironmentVariable('OPENAI_MODEL', '${config.model}', 'User')`);
+  }
+  
+  const script = commands.join('; ');
+  
+  return new Promise((resolve, reject) => {
+    exec(`powershell -Command "${script}"`, (error, stdout, stderr) => {
+      if (error) {
+        reject(error.message);
+      } else {
+        resolve('Qwen Code 配置已保存！');
+      }
+    });
+  });
+});
+
+// 启动 Claude Code (在新终端窗口)
+ipcMain.handle('launch-claude', async () => {
+  const { spawn } = require('child_process');
+  return new Promise((resolve) => {
+    // PowerShell 命令：设置执行策略，刷新环境变量，然后启动 claude
+    const psCommand = `
+      Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force;
+      $env:ANTHROPIC_BASE_URL = [Environment]::GetEnvironmentVariable('ANTHROPIC_BASE_URL', 'User');
+      $env:ANTHROPIC_AUTH_TOKEN = [Environment]::GetEnvironmentVariable('ANTHROPIC_AUTH_TOKEN', 'User');
+      $env:ANTHROPIC_MODEL = [Environment]::GetEnvironmentVariable('ANTHROPIC_MODEL', 'User');
+      $env:ANTHROPIC_SMALL_FAST_MODEL = [Environment]::GetEnvironmentVariable('ANTHROPIC_SMALL_FAST_MODEL', 'User');
+      $env:API_TIMEOUT_MS = [Environment]::GetEnvironmentVariable('API_TIMEOUT_MS', 'User');
+      claude
+    `.replace(/\n/g, ' ');
+    
+    const child = spawn('powershell', ['-NoExit', '-Command', psCommand], {
+      detached: true,
+      stdio: 'ignore',
+      shell: true
+    });
+    child.unref();
+    setTimeout(() => resolve('已在新窗口启动 Claude Code'), 500);
+  });
+});
+
+// 启动 Qwen Code (在新终端窗口)
+ipcMain.handle('launch-qwen', async () => {
+  const { spawn } = require('child_process');
+  return new Promise((resolve) => {
+    // PowerShell 命令：设置执行策略，刷新环境变量，然后启动 qwen
+    const psCommand = `
+      Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force;
+      $env:OPENAI_API_KEY = [Environment]::GetEnvironmentVariable('OPENAI_API_KEY', 'User');
+      $env:OPENAI_BASE_URL = [Environment]::GetEnvironmentVariable('OPENAI_BASE_URL', 'User');
+      $env:OPENAI_MODEL = [Environment]::GetEnvironmentVariable('OPENAI_MODEL', 'User');
+      qwen
+    `.replace(/\n/g, ' ');
+    
+    const child = spawn('powershell', ['-NoExit', '-Command', psCommand], {
+      detached: true,
+      stdio: 'ignore',
+      shell: true
+    });
+    child.unref();
+    setTimeout(() => resolve('已在新窗口启动 Qwen Code'), 500);
+  });
+});
+
 // 部署 Cloudflare Worker
 ipcMain.handle('deploy-worker', async (event, config) => {
   const https = require('https');

@@ -20,6 +20,7 @@
         <div class="nav-section">
           <div class="nav-title">工具</div>
           <button class="sidebar-btn" data-view="install-claude">安装 Claude Code</button>
+          <button class="sidebar-btn" data-view="install-qwen">安装 Qwen Code</button>
           <button class="sidebar-btn" data-view="install-node">下载 Node.js</button>
         </div>
         <div class="nav-section">
@@ -126,6 +127,52 @@
         <div id="install-message" class="message"></div>
       </div>
 
+      <!-- 安装 Qwen Code 视图 -->
+      <div id="view-install-qwen" class="view">
+        <header class="main-header">
+          <h2>安装 Qwen Code</h2>
+          <p class="subtitle">阿里云百炼专属 AI 编程助手</p>
+        </header>
+        <div class="info-card">
+          <h3>Qwen Code 介绍</h3>
+          <p>Qwen Code 是阿里云百炼推出的命令行 AI 编程工具，专为 <strong>Qwen3-Coder</strong> 模型优化。</p>
+          <p>安装命令：<code>npm install -g @qwen-code/qwen-code@latest</code></p>
+          <p>启动命令：<code>qwen</code></p>
+          <p class="hint" style="margin-top: 16px;">Qwen Code 提供每天 2000 次免费 API 调用额度！</p>
+        </div>
+        <div class="info-card" style="margin-top: 16px;">
+          <h3>配置 Qwen Code</h3>
+          <div class="form-group">
+            <label>百炼 API Key</label>
+            <input type="password" id="qwen-api-key" class="input-field" placeholder="输入阿里云百炼 API Key">
+          </div>
+          <div class="form-group">
+            <label>选择模型</label>
+            <select id="qwen-model-select" class="input-field">
+              <option value="qwen3-coder-plus">Qwen3 Coder Plus (推荐)</option>
+              <option value="qwen3-coder">Qwen3 Coder</option>
+              <option value="qwen-max">Qwen Max</option>
+              <option value="qwen-plus">Qwen Plus</option>
+              <option value="qwen-turbo">Qwen Turbo</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>地域</label>
+            <select id="qwen-region-select" class="input-field">
+              <option value="https://dashscope.aliyuncs.com/compatible-mode/v1">北京 (推荐)</option>
+              <option value="https://dashscope-intl.aliyuncs.com/compatible-mode/v1">新加坡</option>
+              <option value="https://dashscope-us.aliyuncs.com/compatible-mode/v1">弗吉尼亚</option>
+            </select>
+          </div>
+        </div>
+        <div class="button-row" style="margin-top: 20px;">
+          <button id="install-qwen-btn" class="btn-primary btn-large">安装 Qwen Code</button>
+          <button id="config-qwen-btn" class="btn-secondary btn-large">应用配置</button>
+        </div>
+        <button class="btn-secondary btn-large" style="margin-top: 12px;" data-url="https://help.aliyun.com/zh/model-studio/qwen-code">查看官方文档</button>
+        <div id="qwen-message" class="message"></div>
+      </div>
+
       <!-- 下载 Node.js 视图 -->
       <div id="view-install-node" class="view">
         <header class="main-header">
@@ -134,7 +181,7 @@
         </header>
         <div class="info-card">
           <h3>安装说明</h3>
-          <p>Node.js 是运行 Claude Code 的必要环境。</p>
+          <p>Node.js 是运行 Claude Code / Qwen Code 的必要环境。</p>
           <p>推荐版本：v24.13.0 (LTS)</p>
           <p>点击下方按钮将下载 Windows x64 安装包。</p>
         </div>
@@ -188,13 +235,20 @@
       <div id="view-api-qwen" class="view">
         <header class="main-header">
           <h2>通义千问</h2>
-          <p class="subtitle">阿里云，编程专用模型</p>
+          <p class="subtitle">阿里云百炼，Qwen3-Coder 编程专用</p>
         </header>
         <div class="info-card">
           <h3>平台信息</h3>
-          <p>通义千问是阿里云推出的大语言模型，Qwen3-Coder 专为编程优化。</p>
-          <p>推荐模型：qwen3-coder</p>
+          <p>通义千问是阿里云推出的大语言模型，<strong>Qwen3-Coder</strong> 专为编程优化。</p>
+          <p>推荐模型：qwen3-coder-plus</p>
           <p>API 地址：dashscope.aliyuncs.com</p>
+        </div>
+        <div class="info-card" style="margin-top: 16px; border-color: #c8ff00;">
+          <h3 style="color: #c8ff00;">推荐：使用 Qwen Code</h3>
+          <p>阿里云提供了专属的 <strong>Qwen Code</strong> CLI 工具，专为 Qwen3-Coder 优化。</p>
+          <p style="color: #c8ff00;">• 每天 2000 次免费调用额度</p>
+          <p style="color: #c8ff00;">• 专属优化，体验更佳</p>
+          <p style="margin-top: 8px;">前往「工具 → 安装 Qwen Code」进行安装配置。</p>
         </div>
         <button class="btn-primary btn-large" data-url="https://dashscope.console.aliyun.com/">前往获取 API Key</button>
       </div>

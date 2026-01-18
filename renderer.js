@@ -36,9 +36,11 @@ const PROVIDERS = {
   },
   qwen: {
     name: '通义千问',
-    baseUrl: 'https://dashscope.aliyuncs.com/api/v2/apps/claude-code-proxy',
+    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    note: '推荐使用 Qwen Code CLI 工具获得最佳体验',
     models: [
-      { id: 'qwen3-coder', name: 'Qwen3 Coder (推荐)' },
+      { id: 'qwen3-coder-plus', name: 'Qwen3 Coder Plus (推荐)' },
+      { id: 'qwen3-coder', name: 'Qwen3 Coder' },
       { id: 'qwen-max', name: 'Qwen Max' },
       { id: 'qwen-plus', name: 'Qwen Plus' },
       { id: 'qwen-turbo', name: 'Qwen Turbo' },
@@ -134,8 +136,8 @@ async function loadCurrentConfig() {
       if (config.model && config.model.includes('claude')) {
         providerName = 'Anthropic [网关]';
         providerId = 'anthropic';
-      } else {
-        providerName = '自定义网关';
+    } else {
+      providerName = '自定义网关';
         providerId = 'anthropic';  // 默认选择 Anthropic
       }
     }
@@ -198,6 +200,18 @@ function setupEventListeners() {
   
   // 下载 Node.js
   document.getElementById('download-node-btn').addEventListener('click', downloadNodejs);
+  
+  // 安装 Qwen Code
+  const installQwenBtn = document.getElementById('install-qwen-btn');
+  if (installQwenBtn) {
+    installQwenBtn.addEventListener('click', installQwenCode);
+  }
+  
+  // 配置 Qwen Code
+  const configQwenBtn = document.getElementById('config-qwen-btn');
+  if (configQwenBtn) {
+    configQwenBtn.addEventListener('click', configQwenCode);
+  }
   
   // 清空历史
   document.getElementById('clear-history-btn').addEventListener('click', clearHistory);
@@ -403,6 +417,66 @@ async function downloadNodejs() {
   }
 }
 
+// Qwen Code 安装
+async function installQwenCode() {
+  showLoading('正在安装 Qwen Code，请稍候...');
+  try {
+    const result = await ipcRenderer.invoke('install-qwen-code');
+    hideLoading();
+    showQwenMessage(result, 'success');
+  } catch (error) {
+    hideLoading();
+    showQwenMessage(String(error), 'error');
+  }
+}
+
+// Qwen Code 配置
+async function configQwenCode() {
+  const apiKey = document.getElementById('qwen-api-key').value.trim();
+  const model = document.getElementById('qwen-model-select').value;
+  const baseUrl = document.getElementById('qwen-region-select').value;
+  
+  if (!apiKey) {
+    showQwenMessage('请输入百炼 API Key', 'error');
+    return;
+  }
+  
+  showLoading('正在应用 Qwen Code 配置...');
+  try {
+    await ipcRenderer.invoke('config-qwen-code', {
+      apiKey,
+      model,
+      baseUrl
+    });
+    
+    // 配置成功后启动 Qwen Code
+    showLoading('正在启动 Qwen Code...');
+    try {
+      await ipcRenderer.invoke('launch-qwen');
+      hideLoading();
+      showQwenMessage('配置已应用，Qwen Code 已启动', 'success');
+    } catch (launchError) {
+      hideLoading();
+      showQwenMessage('配置已保存，启动失败: ' + launchError, 'success');
+    }
+  } catch (error) {
+    hideLoading();
+    showQwenMessage('配置失败: ' + error, 'error');
+  }
+}
+
+// Qwen 页面消息显示
+function showQwenMessage(text, type) {
+  const msg = document.getElementById('qwen-message');
+  if (msg) {
+    msg.textContent = text;
+    msg.className = 'message ' + type;
+    setTimeout(() => {
+      msg.className = 'message';
+    }, 8000);
+  }
+}
+
 function selectProvider(providerId) {
   currentProvider = providerId;
   const provider = PROVIDERS[providerId];
@@ -448,7 +522,7 @@ function selectProvider(providerId) {
       customModelGroup.style.display = 'block';
     } else {
       customModelGroup.style.display = 'none';
-    }
+  }
   };
 }
 
@@ -525,8 +599,6 @@ async function applyConfig() {
   try {
     const result = await ipcRenderer.invoke('apply-config', config);
     await loadCurrentConfig();
-    hideLoading();
-    showMessage(result, 'success');
     
     // 保存到历史配置（包含网关信息）
     saveToHistory({
@@ -538,6 +610,37 @@ async function applyConfig() {
       gateway: gateway || '',  // 保存统一网关配置
       timestamp: Date.now()
     });
+    
+    // 根据服务商类型选择启动 Claude Code 或 Qwen Code
+    if (currentProvider === 'qwen') {
+      // 通义千问使用 Qwen Code，需要同时配置 OPENAI 环境变量
+      showLoading('正在配置 Qwen Code...');
+      try {
+        await ipcRenderer.invoke('config-qwen-code', {
+          apiKey: apiKey,
+          model: model,
+          baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+        });
+        showLoading('正在启动 Qwen Code...');
+        await ipcRenderer.invoke('launch-qwen');
+        hideLoading();
+        showMessage('配置已应用，Qwen Code 已启动', 'success');
+      } catch (launchError) {
+        hideLoading();
+        showMessage('配置已应用 (启动失败: ' + launchError + ')', 'success');
+      }
+    } else {
+      // 其他服务商启动 Claude Code
+      showLoading('正在启动 Claude Code...');
+      try {
+        await ipcRenderer.invoke('launch-claude');
+        hideLoading();
+        showMessage('配置已应用，Claude Code 已启动', 'success');
+      } catch (launchError) {
+        hideLoading();
+        showMessage('配置已应用 (启动失败: ' + launchError + ')', 'success');
+      }
+    }
   } catch (error) {
     hideLoading();
     showMessage('配置失败: ' + error, 'error');
@@ -735,9 +838,7 @@ async function confirmSwitch() {
       authToken: config.authToken || ''
     };
     
-    const result = await ipcRenderer.invoke('apply-config', applyConfig);
-    hideLoading();
-    showMessage('已切换到: ' + config.providerName + ' - ' + config.model, 'success');
+    await ipcRenderer.invoke('apply-config', applyConfig);
     
     // 更新界面上的统一网关输入框
     const gatewayInput = document.getElementById('unified-gateway');
@@ -769,6 +870,37 @@ async function confirmSwitch() {
       ...config,
       timestamp: Date.now()
     });
+    
+    // 根据服务商类型选择启动 Claude Code 或 Qwen Code
+    if (config.providerId === 'qwen') {
+      // 通义千问使用 Qwen Code
+      showLoading('正在配置 Qwen Code...');
+      try {
+        await ipcRenderer.invoke('config-qwen-code', {
+          apiKey: config.authToken,
+          model: config.model,
+          baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+        });
+        showLoading('正在启动 Qwen Code...');
+        await ipcRenderer.invoke('launch-qwen');
+        hideLoading();
+        showMessage('已切换到: ' + config.providerName + '，Qwen Code 已启动', 'success');
+      } catch (launchError) {
+        hideLoading();
+        showMessage('已切换到: ' + config.providerName + ' (启动失败)', 'success');
+      }
+    } else {
+      // 其他服务商启动 Claude Code
+      showLoading('正在启动 Claude Code...');
+      try {
+        await ipcRenderer.invoke('launch-claude');
+        hideLoading();
+        showMessage('已切换到: ' + config.providerName + '，Claude Code 已启动', 'success');
+      } catch (launchError) {
+        hideLoading();
+        showMessage('已切换到: ' + config.providerName + ' (启动失败)', 'success');
+      }
+    }
   } catch (error) {
     hideLoading();
     showMessage('切换失败: ' + error, 'error');
