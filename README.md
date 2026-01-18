@@ -36,9 +36,20 @@ CFclaude 是一款 Windows 桌面工具，用于快速切换 Claude Code 和 Qwe
 
 ## 下载安装
 
-从 [Releases](https://github.com/violettoolssite/CFclaude/releases) 下载 CFclaude.exe
+从 [Releases](https://github.com/violettoolssite/CFclaude/releases) 下载对应平台的安装包：
 
-系统要求：Windows 10/11 x64
+| 平台 | 文件格式 | 说明 |
+|------|----------|------|
+| Windows | .exe (便携版) | 下载即用，无需安装 |
+| Windows | .exe (安装版) | NSIS 安装程序 |
+| Linux | .AppImage | 通用格式，赋予执行权限后运行 |
+| Linux | .deb | Debian/Ubuntu 安装包 |
+| macOS | .dmg | 支持 Intel 和 Apple Silicon |
+
+系统要求：
+- Windows 10/11 x64
+- Linux x64 (Ubuntu 20.04+, Debian 11+)
+- macOS 10.15+ (Intel / Apple Silicon)
 
 ## 使用方法
 
