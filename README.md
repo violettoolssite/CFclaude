@@ -96,7 +96,7 @@ CFclaude 是一款 Windows 桌面工具，用于快速切换 Claude Code 的 AI 
 
 ```
 CFclaude/
-├── cloudflare-worker/      # 开源
+├── cloudflare-worker/
 │   ├── worker.js
 │   ├── wrangler.toml
 │   └── README.md
