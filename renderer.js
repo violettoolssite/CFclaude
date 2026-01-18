@@ -23,10 +23,7 @@ const PROVIDERS = {
     name: 'Kimi',
     baseUrl: 'https://api.moonshot.cn/anthropic',
     models: [
-      { id: 'kimi-k2', name: 'Kimi K2 (推荐)' },
-      { id: 'moonshot-v1-128k', name: 'Moonshot V1 128K' },
-      { id: 'moonshot-v1-32k', name: 'Moonshot V1 32K' },
-      { id: 'moonshot-v1-8k', name: 'Moonshot V1 8K' }
+      { id: 'kimi-k2-turbo-preview', name: 'Kimi K2 (推荐)' }
     ]
   },
   zhipu: {
@@ -80,9 +77,9 @@ const PROVIDERS = {
     name: 'Anthropic',
     baseUrl: '',
     models: [
-      { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4' },
-      { id: 'claude-opus-4-20250514', name: 'Claude Opus 4' },
-      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet' }
+      { id: 'claude-sonnet-4-5-20250514', name: 'Sonnet 4.5 (默认推荐) $3/$15' },
+      { id: 'claude-opus-4-5-20250514', name: 'Opus 4.5 (最强) $5/$25' },
+      { id: 'claude-haiku-4-5-20250514', name: 'Haiku 4.5 (最快) $1/$5' }
     ]
   }
 };
@@ -107,6 +104,8 @@ async function loadCurrentConfig() {
   let providerName = '-';
   let providerId = null;
   let modelName = '-';
+  let isCustomGateway = false;
+  let gatewayUrl = '';
   
   if (config.baseUrl) {
     if (config.baseUrl.includes('deepseek')) {
@@ -131,7 +130,16 @@ async function loadCurrentConfig() {
       providerName = 'Cloudflare';
       providerId = 'cloudflare';
     } else {
-      providerName = '自定义网关';
+      // 使用了统一网关，根据模型名判断服务商
+      isCustomGateway = true;
+      gatewayUrl = config.baseUrl;
+      if (config.model && config.model.includes('claude')) {
+        providerName = 'Anthropic [网关]';
+        providerId = 'anthropic';
+      } else {
+        providerName = '自定义网关';
+        providerId = 'anthropic';  // 默认选择 Anthropic
+      }
     }
   } else if (config.model) {
     providerName = 'Anthropic';
@@ -161,6 +169,11 @@ async function loadCurrentConfig() {
     // 如果是 Cloudflare，填入 Worker URL
     if (providerId === 'cloudflare' && config.baseUrl) {
       document.getElementById('cf-worker-url').value = config.baseUrl;
+    }
+    // 填入统一网关地址
+    const gatewayInput = document.getElementById('unified-gateway');
+    if (gatewayInput) {
+      gatewayInput.value = isCustomGateway ? gatewayUrl : '';
     }
   }
 }
@@ -422,7 +435,8 @@ function selectProvider(providerId) {
     cfConfig.style.display = 'block';
     apiKeyGroup.querySelector('label').textContent = 'API Token (可选)';
   } else if (providerId === 'anthropic') {
-    apiKeyGroup.style.display = 'none';
+    apiKeyGroup.style.display = 'block';
+    apiKeyGroup.querySelector('label').textContent = 'Anthropic API Key';
   }
 }
 
@@ -467,9 +481,14 @@ async function applyConfig() {
       config.authToken = 'cf-worker';
     }
   } else if (currentProvider === 'anthropic') {
-    // Anthropic 官方，清除 baseUrl
-    config.baseUrl = '';
-    config.authToken = '';
+    // Anthropic 官方或通过网关
+    if (!apiKey) {
+      showMessage('请输入 Anthropic API Key', 'error');
+      return;
+    }
+    // 如果设置了统一网关，使用网关地址；否则使用官方默认地址
+    config.baseUrl = gateway || '';
+    config.authToken = apiKey;
   } else {
     if (!apiKey) {
       showMessage('请输入 API Key', 'error');
@@ -487,13 +506,14 @@ async function applyConfig() {
     hideLoading();
     showMessage(result, 'success');
     
-    // 保存到历史配置
+    // 保存到历史配置（包含网关信息）
     saveToHistory({
       providerId: currentProvider,
       providerName: provider.name,
       model: model,
       baseUrl: config.baseUrl,
       authToken: config.authToken,
+      gateway: gateway || '',  // 保存统一网关配置
       timestamp: Date.now()
     });
   } catch (error) {
@@ -592,7 +612,7 @@ function loadHistoryList() {
   
   container.innerHTML = history.map((item, index) => `
     <div class="history-item" data-index="${index}">
-      <div class="provider-name">${item.providerName}</div>
+      <div class="provider-name">${item.providerName}${item.gateway ? ' [网关]' : ''}</div>
       <div class="model-name">${item.model}</div>
       <div class="time">${formatTime(item.timestamp)}</div>
     </div>
@@ -645,6 +665,15 @@ function showConfirmModal(config) {
   const modal = document.getElementById('confirm-modal');
   const details = document.getElementById('modal-details');
   
+  let gatewayRow = '';
+  if (config.gateway) {
+    gatewayRow = `
+    <div class="detail-row">
+      <span class="detail-label">统一网关</span>
+      <span class="detail-value" style="font-size: 10px; word-break: break-all;">${config.gateway}</span>
+    </div>`;
+  }
+  
   details.innerHTML = `
     <div class="detail-row">
       <span class="detail-label">服务商</span>
@@ -654,6 +683,7 @@ function showConfirmModal(config) {
       <span class="detail-label">模型</span>
       <span class="detail-value">${config.model}</span>
     </div>
+    ${gatewayRow}
     <div class="detail-row">
       <span class="detail-label">配置时间</span>
       <span class="detail-value">${formatTime(config.timestamp)}</span>
@@ -684,9 +714,33 @@ async function confirmSwitch() {
     };
     
     const result = await ipcRenderer.invoke('apply-config', applyConfig);
-    await loadCurrentConfig();
     hideLoading();
     showMessage('已切换到: ' + config.providerName + ' - ' + config.model, 'success');
+    
+    // 更新界面上的统一网关输入框
+    const gatewayInput = document.getElementById('unified-gateway');
+    if (gatewayInput) {
+      gatewayInput.value = config.gateway || '';
+    }
+    
+    // 选中正确的服务商
+    if (config.providerId) {
+      selectProvider(config.providerId);
+      // 设置模型选择
+      if (config.model) {
+        const modelSelect = document.getElementById('model-select');
+        for (let i = 0; i < modelSelect.options.length; i++) {
+          if (modelSelect.options[i].value === config.model) {
+            modelSelect.selectedIndex = i;
+            break;
+          }
+        }
+      }
+    }
+    
+    // 更新当前配置显示
+    document.getElementById('current-provider').textContent = config.providerName + (config.gateway ? ' [网关]' : '');
+    document.getElementById('current-model').textContent = config.model;
     
     // 更新历史时间戳
     saveToHistory({
