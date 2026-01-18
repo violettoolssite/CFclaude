@@ -100,6 +100,9 @@ const PROVIDERS = {
 let unifiedGateway = '';
 
 let currentProvider = null;
+let isMonitoring = false;
+let currentMonitorDir = '';
+let currentCliTool = '-';
 
 // 初始化
 document.addEventListener('DOMContentLoaded', async () => {
@@ -108,7 +111,538 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadCfConfig();
   loadHistoryList();
   setupModalListeners();
+  setupMonitorListeners();
 });
+
+// 设置文件监控事件监听
+function setupMonitorListeners() {
+  // 开始监控按钮
+  document.getElementById('start-monitor-btn').addEventListener('click', startMonitoring);
+  document.getElementById('stop-monitor-btn').addEventListener('click', stopMonitoring);
+  document.getElementById('refresh-files-btn').addEventListener('click', refreshFileList);
+  document.getElementById('clear-log-btn').addEventListener('click', clearOperationLog);
+  
+  // 文件详情面板按钮
+  document.getElementById('close-detail-btn').addEventListener('click', hideFileDetail);
+  document.getElementById('detail-open-folder').addEventListener('click', openInFolder);
+  document.getElementById('detail-open-file').addEventListener('click', openFile);
+  document.getElementById('detail-preview').addEventListener('click', previewFileContent);
+  
+  // 预览模态框按钮
+  document.getElementById('close-preview-btn').addEventListener('click', closePreviewModal);
+  document.getElementById('preview-open-folder').addEventListener('click', openInFolder);
+  document.getElementById('preview-open-file').addEventListener('click', openFile);
+  document.getElementById('preview-restore').addEventListener('click', showRestoreConfirm);
+  document.getElementById('preview-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'preview-modal') closePreviewModal();
+  });
+  
+  // 回溯确认模态框按钮
+  document.getElementById('close-restore-confirm').addEventListener('click', hideRestoreConfirm);
+  document.getElementById('cancel-restore').addEventListener('click', hideRestoreConfirm);
+  document.getElementById('confirm-restore').addEventListener('click', confirmRestore);
+  document.getElementById('restore-confirm-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'restore-confirm-modal') hideRestoreConfirm();
+  });
+  
+  // 监听文件变化事件
+  ipcRenderer.on('file-change', (event, data) => {
+    addLogEntry(data);
+    // 刷新文件列表
+    if (currentMonitorDir) {
+      refreshFileList();
+    }
+  });
+}
+
+// 开始监控
+async function startMonitoring() {
+  const workdir = document.getElementById('workdir-path').value.trim();
+  
+  if (!workdir) {
+    showMessage('请先选择工作目录', 'error');
+    return;
+  }
+  
+  try {
+    const result = await ipcRenderer.invoke('start-file-watch', workdir);
+    if (result.success) {
+      isMonitoring = true;
+      currentMonitorDir = workdir;
+      
+      // 更新 UI
+      document.getElementById('start-monitor-btn').disabled = true;
+      document.getElementById('stop-monitor-btn').disabled = false;
+      document.getElementById('monitor-status').textContent = '监控中';
+      document.getElementById('monitor-workdir').textContent = workdir.split(/[/\\]/).pop();
+      document.getElementById('monitor-workdir').title = workdir;
+      document.getElementById('status-indicator').className = 'status-dot running';
+      
+      // 刷新文件列表
+      await refreshFileList();
+      
+      addLogEntry({ type: 'info', filename: '开始监控目录', time: new Date().toISOString() });
+    } else {
+      showMessage('启动监控失败: ' + result.error, 'error');
+    }
+  } catch (error) {
+    showMessage('启动监控失败: ' + error, 'error');
+  }
+}
+
+// 停止监控
+async function stopMonitoring() {
+  try {
+    await ipcRenderer.invoke('stop-file-watch');
+    isMonitoring = false;
+    
+    // 更新 UI
+    document.getElementById('start-monitor-btn').disabled = false;
+    document.getElementById('stop-monitor-btn').disabled = true;
+    document.getElementById('monitor-status').textContent = '已停止';
+    document.getElementById('status-indicator').className = 'status-dot idle';
+    
+    addLogEntry({ type: 'info', filename: '停止监控', time: new Date().toISOString() });
+  } catch (error) {
+    showMessage('停止监控失败: ' + error, 'error');
+  }
+}
+
+// 刷新文件列表
+async function refreshFileList() {
+  const workdir = document.getElementById('workdir-path').value.trim() || currentMonitorDir;
+  
+  if (!workdir) {
+    document.getElementById('file-list').innerHTML = '<p class="empty-hint">选择工作目录后显示</p>';
+    return;
+  }
+  
+  try {
+    const result = await ipcRenderer.invoke('read-directory', workdir);
+    const container = document.getElementById('file-list');
+    
+    if (result.success && result.files.length > 0) {
+      container.innerHTML = result.files.map(file => `
+        <div class="file-item ${file.isDirectory ? 'folder' : ''}" title="${file.path}">
+          <span class="file-icon">${file.isDirectory ? '📁' : '📄'}</span>
+          <span class="file-name">${file.name}</span>
+        </div>
+      `).join('');
+    } else if (result.success) {
+      container.innerHTML = '<p class="empty-hint">目录为空</p>';
+    } else {
+      container.innerHTML = `<p class="empty-hint">读取失败: ${result.error}</p>`;
+    }
+  } catch (error) {
+    document.getElementById('file-list').innerHTML = `<p class="empty-hint">读取失败</p>`;
+  }
+}
+
+// 当前选中的日志数据
+let selectedLogData = null;
+let logEntries = [];  // 存储所有日志条目数据
+let logIdCounter = 0; // 日志条目ID计数器
+
+// 添加操作日志
+function addLogEntry(data) {
+  // 分配唯一ID
+  const logId = ++logIdCounter;
+  const logData = { ...data, logId };
+  
+  // 添加到日志数组开头
+  logEntries.unshift(logData);
+  
+  // 限制日志数量
+  if (logEntries.length > 100) {
+    logEntries = logEntries.slice(0, 100);
+  }
+  
+  // 渲染新条目
+  renderLogEntry(logData, true);
+}
+
+// 渲染单个日志条目
+function renderLogEntry(data, prepend = false) {
+  const container = document.getElementById('operation-log');
+  const time = new Date(data.time).toLocaleTimeString();
+  
+  // 移除空提示
+  const hint = container.querySelector('.empty-hint');
+  if (hint) hint.remove();
+  
+  const entry = document.createElement('div');
+  entry.className = `log-entry ${data.type}`;
+  entry.title = data.path || data.filename;
+  entry.dataset.logId = data.logId;
+  
+  let actionText = data.action || '';
+  
+  switch (data.type) {
+    case 'create': 
+      actionText = actionText || '[新建]';
+      break;
+    case 'edit': 
+      actionText = actionText || '[编辑]';
+      break;
+    case 'delete': 
+      actionText = actionText || '[删除]';
+      break;
+    case 'folder': 
+      actionText = actionText || '[目录]';
+      break;
+    case 'touch': 
+      actionText = actionText || '[读取]';
+      break;
+    case 'modify': 
+      actionText = actionText || '[修改]';
+      break;
+    case 'rename': 
+      actionText = actionText || '[重命名]';
+      break;
+    case 'info': 
+      actionText = '';
+      break;
+    case 'rollback':
+      actionText = '';
+      break;
+  }
+  
+  // 获取简短文件名
+  const shortName = data.filename.split(/[/\\]/).pop();
+  
+  if (data.type === 'info' || data.type === 'rollback') {
+    entry.innerHTML = `<span class="time">${time}</span> ${data.filename}`;
+  } else {
+    entry.innerHTML = `
+      <span class="time">${time}</span>
+      <span class="action-text">${actionText}</span>
+      <span class="file-name">${shortName}</span>
+    `;
+    
+    // 添加点击事件
+    entry.addEventListener('click', () => showFileDetail(data, entry));
+  }
+  
+  // 插入位置
+  if (prepend) {
+    container.insertBefore(entry, container.firstChild);
+  } else {
+    container.appendChild(entry);
+  }
+}
+
+// 重新渲染所有日志
+function rerenderAllLogs() {
+  const container = document.getElementById('operation-log');
+  container.innerHTML = '';
+  
+  if (logEntries.length === 0) {
+    container.innerHTML = '<p class="empty-hint">等待文件操作...</p>';
+    return;
+  }
+  
+  // 按顺序渲染（数组已经是从新到旧排序）
+  logEntries.forEach(data => renderLogEntry(data, false));
+}
+
+// 回溯日志到指定条目（移除该条目之后的所有操作）
+function rollbackLogsTo(logId) {
+  const index = logEntries.findIndex(entry => entry.logId === logId);
+  if (index === -1) return;
+  
+  // 统计被移除的操作数量
+  const removedCount = index;
+  
+  // 保留从当前条目开始的所有条目（即移除之前的新操作）
+  // 因为数组是从新到旧排序的，所以 index 之前的都是更新的操作
+  logEntries = logEntries.slice(index);
+  
+  // 添加回溯标记
+  const rollbackInfo = {
+    type: 'rollback',
+    filename: `已回溯 - 移除了 ${removedCount} 个后续操作`,
+    time: new Date().toISOString(),
+    logId: ++logIdCounter
+  };
+  logEntries.unshift(rollbackInfo);
+  
+  // 重新渲染
+  rerenderAllLogs();
+}
+
+// 显示文件详情面板
+function showFileDetail(data, entryElement) {
+  selectedLogData = data;
+  
+  // 移除其他选中状态
+  document.querySelectorAll('.log-entry.selected').forEach(el => el.classList.remove('selected'));
+  entryElement.classList.add('selected');
+  
+  // 填充详情
+  const shortName = data.filename.split(/[/\\]/).pop();
+  document.getElementById('detail-filename').textContent = shortName;
+  document.getElementById('detail-action').textContent = data.action || '-';
+  document.getElementById('detail-time').textContent = new Date(data.time).toLocaleString();
+  document.getElementById('detail-path').textContent = data.path || data.filename;
+  document.getElementById('detail-path').title = data.path || data.filename;
+  
+  // 显示面板
+  document.getElementById('file-detail-panel').style.display = 'block';
+}
+
+// 隐藏文件详情面板
+function hideFileDetail() {
+  document.getElementById('file-detail-panel').style.display = 'none';
+  document.querySelectorAll('.log-entry.selected').forEach(el => el.classList.remove('selected'));
+  selectedLogData = null;
+}
+
+// 语言映射表
+const LANG_MAP = {
+  'js': 'javascript',
+  'ts': 'typescript',
+  'jsx': 'javascript',
+  'tsx': 'typescript',
+  'py': 'python',
+  'rb': 'ruby',
+  'java': 'java',
+  'c': 'c',
+  'cpp': 'cpp',
+  'h': 'c',
+  'hpp': 'cpp',
+  'cs': 'csharp',
+  'go': 'go',
+  'rs': 'rust',
+  'php': 'php',
+  'html': 'html',
+  'htm': 'html',
+  'css': 'css',
+  'scss': 'scss',
+  'sass': 'sass',
+  'less': 'less',
+  'json': 'json',
+  'xml': 'xml',
+  'yaml': 'yaml',
+  'yml': 'yaml',
+  'md': 'markdown',
+  'sql': 'sql',
+  'sh': 'bash',
+  'bash': 'bash',
+  'ps1': 'powershell',
+  'bat': 'batch',
+  'vue': 'html',
+  'svelte': 'html'
+};
+
+// 应用代码高亮
+function applyHighlight(codeElement, content, lang) {
+  if (typeof hljs !== 'undefined' && lang !== 'plaintext') {
+    try {
+      const highlighted = hljs.highlight(content, { language: lang });
+      codeElement.innerHTML = highlighted.value;
+      codeElement.className = `hljs language-${lang}`;
+    } catch (e) {
+      codeElement.textContent = content;
+      codeElement.className = 'hljs';
+    }
+  } else {
+    codeElement.textContent = content;
+    codeElement.className = 'hljs';
+  }
+}
+
+// 预览文件内容（使用模态框 + 代码高亮）
+function previewFileContent() {
+  if (!selectedLogData) return;
+  
+  const modal = document.getElementById('preview-modal');
+  const codeWrapper = document.querySelector('.preview-code-wrapper pre');
+  const shortName = selectedLogData.filename.split(/[/\\]/).pop();
+  const action = selectedLogData.action || '';
+  
+  // 判断是否有快照
+  const hasSnapshot = selectedLogData.snapshot !== null && selectedLogData.snapshot !== undefined;
+  const isDeleted = selectedLogData.type === 'delete';
+  
+  // 显示模态框
+  let titleSuffix = hasSnapshot ? '操作快照' : '当前内容';
+  if (isDeleted) titleSuffix = '已删除';
+  document.getElementById('preview-title').textContent = `${shortName} - ${titleSuffix}`;
+  document.getElementById('preview-path').textContent = selectedLogData.path;
+  document.getElementById('preview-path').title = selectedLogData.path;
+  
+  // 重新创建 code 元素以清除高亮状态
+  codeWrapper.innerHTML = '<code id="preview-code" class="hljs"></code>';
+  const codeElement = document.getElementById('preview-code');
+  
+  // 根据文件扩展名确定语言
+  const ext = shortName.split('.').pop().toLowerCase();
+  const lang = LANG_MAP[ext] || 'plaintext';
+  
+  if (isDeleted) {
+    // 文件已删除
+    document.getElementById('preview-size').textContent = '-';
+    codeElement.textContent = '文件已被删除，无法预览';
+    codeElement.className = 'hljs preview-deleted';
+  } else if (hasSnapshot) {
+    // 使用快照内容
+    const sizeStr = selectedLogData.size < 1024 
+      ? `${selectedLogData.size} B` 
+      : `${(selectedLogData.size / 1024).toFixed(1)} KB`;
+    document.getElementById('preview-size').textContent = sizeStr;
+    
+    const content = selectedLogData.snapshot || '(空文件)';
+    applyHighlight(codeElement, content, lang);
+  } else {
+    // 没有快照，实时读取
+    document.getElementById('preview-size').textContent = '加载中...';
+    codeElement.textContent = '正在加载...';
+    
+    ipcRenderer.invoke('read-file-content', selectedLogData.path).then(result => {
+      if (result.success) {
+        const sizeStr = result.size < 1024 
+          ? `${result.size} B` 
+          : `${(result.size / 1024).toFixed(1)} KB`;
+        document.getElementById('preview-size').textContent = sizeStr;
+        applyHighlight(codeElement, result.content || '(空文件)', lang);
+      } else {
+        document.getElementById('preview-size').textContent = '-';
+        codeElement.textContent = result.error;
+        codeElement.className = 'hljs';
+      }
+    }).catch(error => {
+      document.getElementById('preview-size').textContent = '-';
+      codeElement.textContent = '加载失败: ' + error;
+      codeElement.className = 'hljs';
+    });
+  }
+  
+  modal.classList.add('active');
+  updateRestoreButton();
+}
+
+// 关闭预览模态框
+function closePreviewModal() {
+  document.getElementById('preview-modal').classList.remove('active');
+}
+
+// 显示回溯确认对话框
+function showRestoreConfirm() {
+  if (!selectedLogData) return;
+  
+  // 检查是否有快照
+  if (!selectedLogData.snapshot) {
+    showMessage('此操作没有可用的快照内容', 'error');
+    return;
+  }
+  
+  // 检查是否是删除操作
+  if (selectedLogData.type === 'delete') {
+    showMessage('已删除的文件无法回溯', 'error');
+    return;
+  }
+  
+  // 填充确认信息
+  const shortName = selectedLogData.filename.split(/[/\\]/).pop();
+  document.getElementById('restore-filename').textContent = shortName;
+  document.getElementById('restore-time').textContent = new Date(selectedLogData.time).toLocaleString();
+  document.getElementById('restore-action').textContent = selectedLogData.action || selectedLogData.type;
+  
+  // 显示确认模态框
+  document.getElementById('restore-confirm-modal').classList.add('active');
+}
+
+// 隐藏回溯确认对话框
+function hideRestoreConfirm() {
+  document.getElementById('restore-confirm-modal').classList.remove('active');
+}
+
+// 确认执行回溯
+async function confirmRestore() {
+  if (!selectedLogData || !selectedLogData.snapshot) {
+    hideRestoreConfirm();
+    return;
+  }
+  
+  try {
+    const result = await ipcRenderer.invoke('restore-file-snapshot', {
+      path: selectedLogData.path,
+      content: selectedLogData.snapshot
+    });
+    
+    if (result.success) {
+      // 回溯日志到当前选中的操作
+      if (selectedLogData.logId) {
+        rollbackLogsTo(selectedLogData.logId);
+      }
+      
+      showMessage('文件已成功回溯到快照状态', 'success');
+      hideRestoreConfirm();
+      closePreviewModal();
+      hideFileDetail();
+      
+      // 刷新文件列表
+      if (currentMonitorDir) {
+        refreshFileList();
+      }
+    } else {
+      showMessage('回溯失败: ' + result.error, 'error');
+    }
+  } catch (error) {
+    showMessage('回溯失败: ' + error, 'error');
+  }
+}
+
+// 更新回溯按钮状态
+function updateRestoreButton() {
+  const btn = document.getElementById('preview-restore');
+  if (!selectedLogData || !selectedLogData.snapshot || selectedLogData.type === 'delete') {
+    btn.disabled = true;
+    btn.title = '无可用快照';
+  } else {
+    btn.disabled = false;
+    btn.title = '将文件恢复到此快照状态';
+  }
+}
+
+// 在资源管理器中打开
+async function openInFolder() {
+  if (!selectedLogData) return;
+  await ipcRenderer.invoke('show-in-folder', selectedLogData.path);
+}
+
+// 用默认程序打开文件
+async function openFile() {
+  if (!selectedLogData) return;
+  await ipcRenderer.invoke('open-file', selectedLogData.path);
+}
+
+// 清空操作日志
+function clearOperationLog() {
+  logEntries = [];
+  logIdCounter = 0;
+  document.getElementById('operation-log').innerHTML = '<p class="empty-hint">等待文件操作...</p>';
+}
+
+// 更新监控面板中的 CLI 工具显示
+function updateMonitorCliTool(cliTool) {
+  currentCliTool = cliTool;
+  document.getElementById('monitor-cli').textContent = cliTool;
+}
+
+// 自动开始监控（启动 CLI 后）
+async function autoStartMonitoring(workdir) {
+  if (!workdir) return;
+  
+  // 如果已在监控其他目录，先停止
+  if (isMonitoring) {
+    await stopMonitoring();
+  }
+  
+  // 自动填充工作目录并开始监控
+  document.getElementById('workdir-path').value = workdir;
+  await startMonitoring();
+}
 
 // 只更新状态显示，不重置表单
 async function updateStatusDisplay() {
@@ -267,9 +801,6 @@ function setupEventListeners() {
   if (installCodexBtn) {
     installCodexBtn.addEventListener('click', installCodex);
   }
-  
-  // 清空历史
-  document.getElementById('clear-history-btn').addEventListener('click', clearHistory);
   
   // 选择工作目录
   const workdirBtn = document.getElementById('workdir-btn');
@@ -672,6 +1203,11 @@ async function selectWorkdir() {
     const dir = await ipcRenderer.invoke('select-directory');
     if (dir) {
       document.getElementById('workdir-path').value = dir;
+      // 自动刷新文件列表
+      currentMonitorDir = dir;
+      document.getElementById('monitor-workdir').textContent = dir.split(/[/\\]/).pop();
+      document.getElementById('monitor-workdir').title = dir;
+      await refreshFileList();
     }
   } catch (error) {
     showMessage('选择目录失败: ' + error, 'error');
@@ -787,6 +1323,8 @@ async function applyConfig() {
           await ipcRenderer.invoke('launch-qwen-oauth', { workdir });
           hideLoading();
           showMessage('Qwen Code 已启动（OAuth 模式，每天 2000 次免费）', 'success');
+          updateMonitorCliTool('Qwen Code');
+          if (workdir) autoStartMonitoring(workdir);
         } catch (launchError) {
           hideLoading();
           showMessage('启动失败: ' + launchError, 'error');
@@ -803,6 +1341,8 @@ async function applyConfig() {
           });
           hideLoading();
           showMessage('配置已应用，Qwen Code 已启动', 'success');
+          updateMonitorCliTool('Qwen Code');
+          if (workdir) autoStartMonitoring(workdir);
         } catch (launchError) {
           hideLoading();
           showMessage('配置已应用 (启动失败: ' + launchError + ')', 'success');
@@ -820,6 +1360,8 @@ async function applyConfig() {
         });
         hideLoading();
         showMessage('配置已应用，Qwen Code 已启动', 'success');
+        updateMonitorCliTool('Qwen Code');
+        if (workdir) autoStartMonitoring(workdir);
       } catch (launchError) {
         hideLoading();
         showMessage('配置已应用 (启动失败: ' + launchError + ')', 'success');
@@ -831,6 +1373,8 @@ async function applyConfig() {
         await ipcRenderer.invoke('launch-claude', { workdir });
         hideLoading();
         showMessage('配置已应用，Claude Code 已启动', 'success');
+        updateMonitorCliTool('Claude Code');
+        if (workdir) autoStartMonitoring(workdir);
       } catch (launchError) {
         hideLoading();
         showMessage('配置已应用 (启动失败: ' + launchError + ')', 'success');
@@ -992,12 +1536,35 @@ function setupModalListeners() {
   document.getElementById('modal-cancel').addEventListener('click', hideModal);
   document.getElementById('modal-confirm').addEventListener('click', confirmSwitch);
   
-  // 点击背景关闭
+  // 点击背景关闭确认模态框
   document.getElementById('confirm-modal').addEventListener('click', (e) => {
     if (e.target.id === 'confirm-modal') {
       hideModal();
     }
   });
+  
+  // 历史配置模态框
+  document.getElementById('show-history-btn').addEventListener('click', showHistoryModal);
+  document.getElementById('close-history-btn').addEventListener('click', hideHistoryModal);
+  document.getElementById('clear-history-btn').addEventListener('click', clearHistory);
+  
+  // 点击背景关闭历史模态框
+  document.getElementById('history-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'history-modal') {
+      hideHistoryModal();
+    }
+  });
+}
+
+// 显示历史配置模态框
+function showHistoryModal() {
+  loadHistoryList();
+  document.getElementById('history-modal').classList.add('active');
+}
+
+// 隐藏历史配置模态框
+function hideHistoryModal() {
+  document.getElementById('history-modal').classList.remove('active');
 }
 
 function showConfirmModal(config) {
@@ -1156,6 +1723,8 @@ async function confirmSwitch() {
           });
           hideLoading();
           showMessage('已切换到: ' + config.providerName + '，Qwen Code 已启动', 'success');
+          updateMonitorCliTool('Qwen Code');
+          if (workdir) autoStartMonitoring(workdir);
         } catch (launchError) {
           hideLoading();
           showMessage('已切换到: ' + config.providerName + ' (启动失败)', 'success');
@@ -1167,6 +1736,8 @@ async function confirmSwitch() {
           await ipcRenderer.invoke('launch-qwen-oauth', { workdir });
           hideLoading();
           showMessage('已切换到: ' + config.providerName + '，Qwen Code 已启动（OAuth）', 'success');
+          updateMonitorCliTool('Qwen Code');
+          if (workdir) autoStartMonitoring(workdir);
         } catch (launchError) {
           hideLoading();
           showMessage('已切换到: ' + config.providerName + ' (启动失败)', 'success');
@@ -1184,6 +1755,8 @@ async function confirmSwitch() {
         });
         hideLoading();
         showMessage('已切换到: ' + config.providerName + '，Qwen Code 已启动', 'success');
+        updateMonitorCliTool('Qwen Code');
+        if (workdir) autoStartMonitoring(workdir);
       } catch (launchError) {
         hideLoading();
         showMessage('已切换到: ' + config.providerName + ' (启动失败)', 'success');
@@ -1195,6 +1768,8 @@ async function confirmSwitch() {
         await ipcRenderer.invoke('launch-claude', { workdir });
         hideLoading();
         showMessage('已切换到: ' + config.providerName + '，Claude Code 已启动', 'success');
+        updateMonitorCliTool('Claude Code');
+        if (workdir) autoStartMonitoring(workdir);
       } catch (launchError) {
         hideLoading();
         showMessage('已切换到: ' + config.providerName + ' (启动失败)', 'success');

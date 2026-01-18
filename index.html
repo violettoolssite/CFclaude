@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CFclaude - AI 编程助手配置管理</title>
   <link rel="stylesheet" href="styles.css">
+  <!-- highlight.js 代码高亮 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
   <div class="app-layout">
@@ -357,15 +360,104 @@
       </div>
     </main>
 
-    <aside class="history-sidebar">
-      <div class="history-header">
-        <h3>历史配置</h3>
-        <button id="clear-history-btn" class="btn-icon" title="清空历史">×</button>
+    <!-- 右侧监控面板 -->
+    <aside class="monitor-sidebar">
+      <!-- 运行状态 -->
+      <div class="monitor-section">
+        <div class="monitor-header">
+          <h3>运行状态</h3>
+          <span id="status-indicator" class="status-dot idle" title="空闲"></span>
+        </div>
+        <div class="status-info">
+          <div class="status-row-mini">
+            <span>CLI 工具</span>
+            <span id="monitor-cli">-</span>
+          </div>
+          <div class="status-row-mini">
+            <span>工作目录</span>
+            <span id="monitor-workdir" title="">-</span>
+          </div>
+          <div class="status-row-mini">
+            <span>监控状态</span>
+            <span id="monitor-status">未启动</span>
+          </div>
+        </div>
+        <div class="monitor-actions">
+          <button id="start-monitor-btn" class="btn-small">开始监控</button>
+          <button id="stop-monitor-btn" class="btn-small" disabled>停止监控</button>
+        </div>
       </div>
-      <div id="history-list" class="history-list">
-        <p class="history-empty">暂无历史配置</p>
+      
+      <!-- 文件列表 -->
+      <div class="monitor-section files-section">
+        <div class="monitor-header">
+          <h3>文件列表</h3>
+          <button id="refresh-files-btn" class="btn-icon" title="刷新">↻</button>
+        </div>
+        <div id="file-list" class="file-list">
+          <p class="empty-hint">选择工作目录后显示</p>
+        </div>
+      </div>
+      
+      <!-- 文件操作日志 -->
+      <div class="monitor-section log-section">
+        <div class="monitor-header">
+          <h3>操作日志</h3>
+          <button id="clear-log-btn" class="btn-icon" title="清空">×</button>
+        </div>
+        <div id="operation-log" class="operation-log">
+          <p class="empty-hint">等待文件操作...</p>
+        </div>
+      </div>
+      
+      <!-- 文件详情面板 -->
+      <div id="file-detail-panel" class="file-detail-panel" style="display: none;">
+        <div class="detail-panel-header">
+          <span id="detail-filename">文件详情</span>
+          <button id="close-detail-btn" class="btn-icon">×</button>
+        </div>
+        <div class="detail-panel-info">
+          <div class="detail-row-mini">
+            <span>操作</span>
+            <span id="detail-action">-</span>
+          </div>
+          <div class="detail-row-mini">
+            <span>时间</span>
+            <span id="detail-time">-</span>
+          </div>
+          <div class="detail-row-mini">
+            <span>路径</span>
+            <span id="detail-path" title="">-</span>
+          </div>
+        </div>
+        <div class="detail-panel-actions">
+          <button id="detail-preview" class="btn-small btn-highlight">预览代码</button>
+          <button id="detail-open-folder" class="btn-small">打开目录</button>
+          <button id="detail-open-file" class="btn-small">打开文件</button>
+        </div>
+      </div>
+      
+      <!-- 历史配置按钮 -->
+      <div class="monitor-section">
+        <button id="show-history-btn" class="btn-history">历史配置</button>
       </div>
     </aside>
+  </div>
+
+  <!-- 历史配置模态框 -->
+  <div id="history-modal" class="modal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h3>历史配置</h3>
+        <button id="close-history-btn" class="btn-icon" title="关闭">×</button>
+      </div>
+      <div id="history-list" class="history-list-modal">
+        <p class="history-empty">暂无历史配置</p>
+      </div>
+      <div class="modal-actions">
+        <button id="clear-history-btn" class="btn-secondary">清空历史</button>
+      </div>
+    </div>
   </div>
 
   <!-- 确认模态框 -->
@@ -377,6 +469,62 @@
       <div class="modal-actions">
         <button id="modal-cancel" class="btn-secondary">取消</button>
         <button id="modal-confirm" class="btn-primary">确认切换</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文件预览模态框 -->
+  <div id="preview-modal" class="modal">
+    <div class="modal-content modal-preview">
+      <div class="modal-header">
+        <h3 id="preview-title">文件预览</h3>
+        <button id="close-preview-btn" class="btn-icon">×</button>
+      </div>
+      <div class="preview-info">
+        <span id="preview-path" class="preview-path">-</span>
+        <span id="preview-size" class="preview-size">-</span>
+      </div>
+      <div class="preview-code-wrapper">
+        <pre><code id="preview-code" class="hljs"></code></pre>
+      </div>
+      <div class="modal-actions">
+        <button id="preview-restore" class="btn-restore" title="将文件恢复到此快照状态">回溯到此版本</button>
+        <button id="preview-open-folder" class="btn-secondary">打开目录</button>
+        <button id="preview-open-file" class="btn-primary">打开文件</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 回溯确认模态框 -->
+  <div id="restore-confirm-modal" class="modal">
+    <div class="modal-content modal-confirm">
+      <div class="modal-header">
+        <h3>确认回溯</h3>
+        <button id="close-restore-confirm" class="btn-icon">×</button>
+      </div>
+      <div class="restore-confirm-body">
+        <div class="restore-warning">
+          <span class="warning-icon">⚠</span>
+          <p>此操作将用快照内容覆盖当前文件，无法撤销！</p>
+        </div>
+        <div class="restore-info">
+          <div class="restore-row">
+            <span>文件</span>
+            <span id="restore-filename">-</span>
+          </div>
+          <div class="restore-row">
+            <span>快照时间</span>
+            <span id="restore-time">-</span>
+          </div>
+          <div class="restore-row">
+            <span>快照操作</span>
+            <span id="restore-action">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="cancel-restore" class="btn-secondary">取消</button>
+        <button id="confirm-restore" class="btn-danger">确认回溯</button>
       </div>
     </div>
   </div>

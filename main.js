@@ -51,6 +51,274 @@ ipcMain.handle('select-directory', async () => {
   return result.filePaths[0];
 });
 
+// 文件监控相关
+let fileWatcher = null;
+let mainWindowRef = null;
+
+// 获取 mainWindow 引用
+app.on('browser-window-created', (event, window) => {
+  mainWindowRef = window;
+});
+
+// 读取目录文件列表
+ipcMain.handle('read-directory', async (event, dirPath) => {
+  const fs = require('fs');
+  const path = require('path');
+  
+  try {
+    const items = fs.readdirSync(dirPath, { withFileTypes: true });
+    const files = items
+      .filter(item => !item.name.startsWith('.'))  // 过滤隐藏文件
+      .slice(0, 100)  // 限制数量
+      .map(item => ({
+        name: item.name,
+        isDirectory: item.isDirectory(),
+        path: path.join(dirPath, item.name)
+      }))
+      .sort((a, b) => {
+        // 目录在前
+        if (a.isDirectory && !b.isDirectory) return -1;
+        if (!a.isDirectory && b.isDirectory) return 1;
+        return a.name.localeCompare(b.name);
+      });
+    
+    return { success: true, files };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 文件状态缓存（用于检测文件大小变化判断是否为编辑）
+let fileStatsCache = new Map();
+// 防抖缓存（避免重复事件）
+let pendingEvents = new Map();
+
+// 开始监控目录
+ipcMain.handle('start-file-watch', async (event, dirPath) => {
+  const fs = require('fs');
+  const path = require('path');
+  
+  // 停止之前的监控
+  if (fileWatcher) {
+    fileWatcher.close();
+    fileWatcher = null;
+  }
+  
+  // 清空缓存
+  fileStatsCache.clear();
+  pendingEvents.clear();
+  
+  // 初始化文件状态缓存
+  function cacheFileStats(dir) {
+    try {
+      const items = fs.readdirSync(dir, { withFileTypes: true });
+      for (const item of items) {
+        const fullPath = path.join(dir, item.name);
+        if (item.isFile()) {
+          try {
+            const stats = fs.statSync(fullPath);
+            fileStatsCache.set(fullPath, {
+              size: stats.size,
+              mtime: stats.mtimeMs
+            });
+          } catch (e) {}
+        } else if (item.isDirectory() && !item.name.startsWith('.')) {
+          cacheFileStats(fullPath);
+        }
+      }
+    } catch (e) {}
+  }
+  cacheFileStats(dirPath);
+  
+  try {
+    // 使用递归监控
+    fileWatcher = fs.watch(dirPath, { recursive: true }, (eventType, filename) => {
+      if (!filename || filename.startsWith('.') || filename.includes('node_modules')) return;
+      
+      const fullPath = path.join(dirPath, filename);
+      
+      // 防抖处理：100ms 内的重复事件合并
+      if (pendingEvents.has(fullPath)) {
+        clearTimeout(pendingEvents.get(fullPath));
+      }
+      
+      pendingEvents.set(fullPath, setTimeout(() => {
+        pendingEvents.delete(fullPath);
+        
+        let changeType = 'modify';
+        let action = '[修改]';
+        let isDirectory = false;
+        
+        try {
+          const exists = fs.existsSync(fullPath);
+          const cachedStats = fileStatsCache.get(fullPath);
+          
+          if (!exists) {
+            // 文件不存在
+            if (cachedStats) {
+              // 之前存在，现在不存在 - 删除
+              changeType = 'delete';
+              action = '[删除]';
+              fileStatsCache.delete(fullPath);
+            } else {
+              // 之前也不存在 - 忽略
+              return;
+            }
+          } else {
+            const stats = fs.statSync(fullPath);
+            isDirectory = stats.isDirectory();
+            
+            if (isDirectory) {
+              if (!cachedStats) {
+                changeType = 'create';
+                action = '[新建目录]';
+              } else {
+                changeType = 'folder';
+                action = '[访问目录]';
+              }
+            } else {
+              if (!cachedStats) {
+                // 缓存中没有 - 新创建的文件
+                changeType = 'create';
+                action = '[新建]';
+                fileStatsCache.set(fullPath, { size: stats.size, mtime: stats.mtimeMs });
+              } else if (stats.size !== cachedStats.size) {
+                // 大小改变 - 编辑文件
+                changeType = 'edit';
+                action = '[编辑]';
+                fileStatsCache.set(fullPath, { size: stats.size, mtime: stats.mtimeMs });
+              } else if (stats.mtimeMs !== cachedStats.mtime) {
+                // 仅时间改变 - 可能是读取
+                changeType = 'touch';
+                action = '[读取]';
+                fileStatsCache.set(fullPath, { size: stats.size, mtime: stats.mtimeMs });
+              } else {
+                // 没有变化 - 忽略
+                return;
+              }
+            }
+          }
+        } catch (e) {
+          // 访问出错，可能正在被操作，忽略
+          return;
+        }
+        
+        // 读取文件内容快照（仅对文件，且非删除操作）
+        let snapshot = null;
+        let fileSize = 0;
+        if (!isDirectory && changeType !== 'delete') {
+          try {
+            const stats = fs.statSync(fullPath);
+            fileSize = stats.size;
+            // 限制快照大小为 500KB
+            if (fileSize <= 500 * 1024) {
+              snapshot = fs.readFileSync(fullPath, 'utf-8');
+            } else {
+              snapshot = `[文件过大，无法预览快照 (${(fileSize / 1024).toFixed(1)} KB)]`;
+            }
+          } catch (e) {
+            snapshot = null;
+          }
+        }
+        
+        // 发送事件到渲染进程
+        if (mainWindowRef && !mainWindowRef.isDestroyed()) {
+          mainWindowRef.webContents.send('file-change', {
+            type: changeType,
+            action: action,
+            filename: filename,
+            path: fullPath,
+            isDirectory: isDirectory,
+            time: new Date().toISOString(),
+            snapshot: snapshot,
+            size: fileSize
+          });
+        }
+      }, 100));
+    });
+    
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 停止监控
+ipcMain.handle('stop-file-watch', async () => {
+  if (fileWatcher) {
+    fileWatcher.close();
+    fileWatcher = null;
+  }
+  pendingEvents.clear();
+  return { success: true };
+});
+
+// 读取文件内容（用于预览）
+ipcMain.handle('read-file-content', async (event, filePath) => {
+  const fs = require('fs');
+  
+  try {
+    if (!fs.existsSync(filePath)) {
+      return { success: false, error: '文件不存在' };
+    }
+    
+    const stats = fs.statSync(filePath);
+    if (stats.isDirectory()) {
+      return { success: false, error: '这是一个目录' };
+    }
+    
+    // 限制文件大小（最大 100KB）
+    if (stats.size > 100 * 1024) {
+      return { success: false, error: '文件太大，无法预览（>100KB）' };
+    }
+    
+    // 读取文件
+    const content = fs.readFileSync(filePath, 'utf8');
+    return { success: true, content, size: stats.size };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 回溯文件到快照状态
+ipcMain.handle('restore-file-snapshot', async (event, { path: filePath, content }) => {
+  const fs = require('fs');
+  const pathModule = require('path');
+  
+  try {
+    // 确保目录存在
+    const dir = pathModule.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    // 写入快照内容
+    fs.writeFileSync(filePath, content, 'utf8');
+    
+    // 更新缓存
+    const stats = fs.statSync(filePath);
+    fileStatsCache.set(filePath, { size: stats.size, mtime: stats.mtimeMs });
+    
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 在资源管理器中显示文件
+ipcMain.handle('show-in-folder', async (event, filePath) => {
+  const { shell } = require('electron');
+  shell.showItemInFolder(filePath);
+  return { success: true };
+});
+
+// 用默认程序打开文件
+ipcMain.handle('open-file', async (event, filePath) => {
+  const { shell } = require('electron');
+  await shell.openPath(filePath);
+  return { success: true };
+});
+
 // 获取当前环境变量配置（从用户级环境变量读取）
 ipcMain.handle('get-config', async () => {
   const [baseUrl, authToken, model, smallModel] = await Promise.all([
