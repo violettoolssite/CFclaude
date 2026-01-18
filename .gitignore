@@ -26,3 +26,5 @@ icon.png
 create-icon.js
 
 cloudflare-worker/ai-gateway.js
+
+website/
