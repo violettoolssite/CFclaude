@@ -10,7 +10,10 @@
     "build:linux": "electron-builder --linux",
     "build:mac": "electron-builder --mac"
   },
-  "author": "violettoolssite",
+  "author": {
+    "name": "violettoolssite",
+    "email": "violettools.site@gmail.com"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -26,6 +29,7 @@
     "appId": "com.cfclaude.app",
     "productName": "CFclaude",
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "publish": null,
     "win": {
       "target": [
         {

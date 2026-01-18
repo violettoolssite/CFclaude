@@ -3,9 +3,6 @@ node_modules/
 dist/
 release/
 
-# npm 相关
-package-lock.json
-
 # 日志
 *.log
 
