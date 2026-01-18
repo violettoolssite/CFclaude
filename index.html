@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CFclaude</title>
+  <title>CFclaude - AI 编程助手配置管理</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -30,7 +30,7 @@
           <button class="sidebar-btn" data-view="api-kimi">Kimi</button>
           <button class="sidebar-btn" data-view="api-qwen">通义千问</button>
           <button class="sidebar-btn" data-view="api-zhipu">智谱AI</button>
-          <button class="sidebar-btn" data-view="api-modelscope">ModelScope ⚠️</button>
+          <button class="sidebar-btn" data-view="api-modelscope">ModelScope</button>
           <button class="sidebar-btn" data-view="api-cloudflare">Cloudflare</button>
           <button class="sidebar-btn" data-view="api-anthropic">Anthropic</button>
         </div>
@@ -44,8 +44,8 @@
       <!-- 模型配置视图 -->
       <div id="view-config" class="view active">
         <header class="main-header">
-          <h2>模型配置</h2>
-          <p class="subtitle">一键切换 Claude Code 后端服务商</p>
+          <h2>AI 编程助手配置</h2>
+          <p class="subtitle">一键切换 Claude Code / Qwen Code 后端服务商</p>
         </header>
 
         <div class="content-grid">
@@ -77,7 +77,7 @@
             <button class="provider-btn" data-provider="kimi">Kimi</button>
             <button class="provider-btn" data-provider="qwen">通义千问</button>
             <button class="provider-btn" data-provider="zhipu">智谱AI</button>
-            <button class="provider-btn" data-provider="modelscope" style="opacity: 0.6;">ModelScope ⚠️</button>
+            <button class="provider-btn" data-provider="modelscope">ModelScope</button>
             <button class="provider-btn" data-provider="cloudflare">Cloudflare</button>
             <button class="provider-btn" data-provider="anthropic">Anthropic</button>
           </div>
@@ -85,6 +85,10 @@
 
         <section id="config-section" class="config-section" style="display: none;">
           <div class="config-grid">
+            <div id="auth-mode-group" class="form-group" style="display: none;">
+              <label>认证方式</label>
+              <select id="auth-mode-select" class="input-field"></select>
+            </div>
             <div class="form-group">
               <label>选择模型</label>
               <select id="model-select" class="input-field"></select>
@@ -102,6 +106,16 @@
               <input type="text" id="cf-worker-url" class="input-field" placeholder="https://your-worker.workers.dev">
             </div>
           </div>
+          
+          <!-- 启动目录选择 -->
+          <div class="form-group" id="workdir-group">
+            <label>启动目录</label>
+            <div class="workdir-row">
+              <input type="text" id="workdir-path" class="input-field" placeholder="选择或输入工作目录路径">
+              <button id="workdir-btn" class="btn-icon-text" title="选择文件夹">选择</button>
+            </div>
+          </div>
+          
           <div class="action-buttons">
             <button id="apply-btn" class="btn-primary">应用配置</button>
             <button id="clear-btn" class="btn-secondary">清除配置</button>
@@ -115,7 +129,7 @@
       <div id="view-install-claude" class="view">
         <header class="main-header">
           <h2>安装 Claude Code</h2>
-          <p class="subtitle">通过 npm 全局安装 Claude Code CLI 工具</p>
+          <p class="subtitle">Anthropic 官方 AI 编程助手 CLI 工具</p>
         </header>
         <div class="info-card">
           <h3>安装说明</h3>
@@ -131,7 +145,7 @@
       <div id="view-install-qwen" class="view">
         <header class="main-header">
           <h2>安装 Qwen Code</h2>
-          <p class="subtitle">阿里云百炼专属 AI 编程助手</p>
+          <p class="subtitle">阿里云百炼 AI 编程助手，每天 2000 次免费调用</p>
         </header>
         <div class="info-card">
           <h3>Qwen Code 介绍</h3>
@@ -235,7 +249,7 @@
       <div id="view-api-qwen" class="view">
         <header class="main-header">
           <h2>通义千问</h2>
-          <p class="subtitle">阿里云百炼，Qwen3-Coder 编程专用</p>
+          <p class="subtitle">阿里云百炼 Qwen Code，支持 OAuth 免费额度 / API Key</p>
         </header>
         <div class="info-card">
           <h3>平台信息</h3>
@@ -244,11 +258,13 @@
           <p>API 地址：dashscope.aliyuncs.com</p>
         </div>
         <div class="info-card" style="margin-top: 16px; border-color: #c8ff00;">
-          <h3 style="color: #c8ff00;">推荐：使用 Qwen Code</h3>
-          <p>阿里云提供了专属的 <strong>Qwen Code</strong> CLI 工具，专为 Qwen3-Coder 优化。</p>
+          <h3 style="color: #c8ff00;">两种认证方式</h3>
+          <p><strong>OAuth 认证（推荐）</strong></p>
           <p style="color: #c8ff00;">• 每天 2000 次免费调用额度</p>
-          <p style="color: #c8ff00;">• 专属优化，体验更佳</p>
-          <p style="margin-top: 8px;">前往「工具 → 安装 Qwen Code」进行安装配置。</p>
+          <p style="color: #c8ff00;">• 无需 API Key，扫码登录即可</p>
+          <p style="margin-top: 12px;"><strong>OpenAI 兼容认证</strong></p>
+          <p>• 需要百炼 API Key</p>
+          <p>• 可自由选择模型</p>
         </div>
         <button class="btn-primary btn-large" data-url="https://dashscope.console.aliyun.com/">前往获取 API Key</button>
       </div>
@@ -269,20 +285,21 @@
 
       <div id="view-api-modelscope" class="view">
         <header class="main-header">
-          <h2>ModelScope ⚠️</h2>
-          <p class="subtitle">魔搭社区 - 暂不推荐使用</p>
+          <h2>ModelScope</h2>
+          <p class="subtitle">魔搭社区开源模型推理，使用 Qwen Code</p>
         </header>
-        <div class="info-card" style="border-color: #ff4444;">
-          <h3 style="color: #ff4444;">⚠️ 兼容性问题</h3>
-          <p>ModelScope 的 Anthropic API 兼容接口目前处于 <strong>Beta 测试阶段</strong>，存在以下限制：</p>
-          <p style="color: #ff6666;">• max_tokens 限制为 8192，与 Claude Code 不兼容</p>
-          <p style="color: #ff6666;">• 可能出现请求中断或无响应的情况</p>
-          <p style="margin-top: 16px;"><strong>推荐替代方案：</strong></p>
-          <p style="color: #c8ff00;">✓ DeepSeek - 原生支持，编程能力强</p>
-          <p style="color: #c8ff00;">✓ Kimi - 原生支持，超长上下文</p>
-          <p style="color: #c8ff00;">✓ 豆包 - 原生支持，性价比高</p>
+        <div class="info-card">
+          <h3>平台信息</h3>
+          <p>ModelScope 是阿里巴巴的开源模型社区，提供 OpenAI 兼容 API。</p>
+          <p>推荐模型：Qwen2.5-Coder-32B</p>
+          <p>API 地址：api-inference.modelscope.cn</p>
         </div>
-        <button class="btn-secondary btn-large" data-url="https://modelscope.cn/my/myaccesstoken">仍要使用 ModelScope</button>
+        <div class="info-card" style="margin-top: 16px; border-color: #c8ff00;">
+          <h3 style="color: #c8ff00;">使用 Qwen Code</h3>
+          <p>ModelScope 使用 OpenAI 兼容 API，配置后将自动启动 <strong>Qwen Code</strong>。</p>
+          <p style="margin-top: 8px;">如未安装 Qwen Code，请先前往「安装 Qwen Code」页面安装。</p>
+        </div>
+        <button class="btn-primary btn-large" style="margin-top: 20px;" data-url="https://modelscope.cn/my/myaccesstoken">获取 API Key</button>
       </div>
 
       <div id="view-api-cloudflare" class="view">

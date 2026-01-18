@@ -1,13 +1,13 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 1420,
-    height: 920,
-    resizable: false,
-    maximizable: false,
+    width: 1600,
+    height: 1000,
+    resizable: true,
+    maximizable: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -37,6 +37,19 @@ function getEnvVar(name) {
     });
   });
 }
+
+// 选择目录
+ipcMain.handle('select-directory', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openDirectory'],
+    title: '选择启动目录'
+  });
+  
+  if (result.canceled || result.filePaths.length === 0) {
+    return null;
+  }
+  return result.filePaths[0];
+});
 
 // 获取当前环境变量配置（从用户级环境变量读取）
 ipcMain.handle('get-config', async () => {
@@ -178,10 +191,15 @@ ipcMain.handle('config-qwen-code', async (event, config) => {
 });
 
 // 启动 Claude Code (在新终端窗口)
-ipcMain.handle('launch-claude', async () => {
+ipcMain.handle('launch-claude', async (event, options = {}) => {
   const { spawn } = require('child_process');
+  const workdir = options.workdir || '';
+  
   return new Promise((resolve) => {
-    // PowerShell 命令：设置执行策略，刷新环境变量，然后启动 claude
+    // 构建 cd 命令
+    const cdCommand = workdir ? `cd '${workdir.replace(/'/g, "''")}';` : '';
+    
+    // PowerShell 命令：设置执行策略，刷新环境变量，切换目录，然后启动 claude
     const psCommand = `
       Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force;
       $env:ANTHROPIC_BASE_URL = [Environment]::GetEnvironmentVariable('ANTHROPIC_BASE_URL', 'User');
@@ -189,6 +207,7 @@ ipcMain.handle('launch-claude', async () => {
       $env:ANTHROPIC_MODEL = [Environment]::GetEnvironmentVariable('ANTHROPIC_MODEL', 'User');
       $env:ANTHROPIC_SMALL_FAST_MODEL = [Environment]::GetEnvironmentVariable('ANTHROPIC_SMALL_FAST_MODEL', 'User');
       $env:API_TIMEOUT_MS = [Environment]::GetEnvironmentVariable('API_TIMEOUT_MS', 'User');
+      ${cdCommand}
       claude
     `.replace(/\n/g, ' ');
     
@@ -202,16 +221,83 @@ ipcMain.handle('launch-claude', async () => {
   });
 });
 
-// 启动 Qwen Code (在新终端窗口)
-ipcMain.handle('launch-qwen', async () => {
+// 启动 Qwen Code (在新终端窗口) - 使用 OpenAI 兼容认证
+// 可以传入 config 参数直接使用，或者从环境变量读取
+ipcMain.handle('launch-qwen', async (event, config = null) => {
   const { spawn } = require('child_process');
+  const fs = require('fs');
+  const path = require('path');
+  
+  let apiKey, baseUrl, model;
+  
+  // 如果传入了配置，直接使用；否则从环境变量读取
+  if (config && config.apiKey) {
+    apiKey = config.apiKey;
+    baseUrl = config.baseUrl || '';
+    model = config.model || '';
+  } else {
+    // 从用户环境变量读取配置
+    try {
+      apiKey = require('child_process').execSync(
+        'powershell -Command "[Environment]::GetEnvironmentVariable(\'OPENAI_API_KEY\', \'User\')"',
+        { encoding: 'utf8' }
+      ).trim();
+      baseUrl = require('child_process').execSync(
+        'powershell -Command "[Environment]::GetEnvironmentVariable(\'OPENAI_BASE_URL\', \'User\')"',
+        { encoding: 'utf8' }
+      ).trim();
+      model = require('child_process').execSync(
+        'powershell -Command "[Environment]::GetEnvironmentVariable(\'OPENAI_MODEL\', \'User\')"',
+        { encoding: 'utf8' }
+      ).trim();
+    } catch (e) {
+      console.error('读取环境变量失败:', e);
+    }
+  }
+  
+  // 修改 Qwen Code 的 settings.json，将认证类型改为 openai
+  const settingsPath = path.join(process.env.USERPROFILE, '.qwen', 'settings.json');
+  try {
+    let settings = { security: { auth: {} }, '$version': 2 };
+    if (fs.existsSync(settingsPath)) {
+      settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    }
+    if (!settings.security) settings.security = {};
+    if (!settings.security.auth) settings.security.auth = {};
+    
+    settings.security.auth.selectedType = 'openai';
+    if (apiKey) settings.security.auth.apiKey = apiKey;
+    if (baseUrl) settings.security.auth.baseUrl = baseUrl;
+    
+    // 确保目录存在
+    const qwenDir = path.join(process.env.USERPROFILE, '.qwen');
+    if (!fs.existsSync(qwenDir)) {
+      fs.mkdirSync(qwenDir, { recursive: true });
+    }
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+    console.log('已更新 Qwen settings.json:', { selectedType: 'openai', baseUrl });
+  } catch (e) {
+    console.error('修改 Qwen settings.json 失败:', e);
+  }
+  
+  const workdir = config?.workdir || '';
+  
   return new Promise((resolve) => {
-    // PowerShell 命令：设置执行策略，刷新环境变量，然后启动 qwen
+    // 直接在命令中设置环境变量
+    const escapedApiKey = apiKey ? apiKey.replace(/'/g, "''") : '';
+    const escapedBaseUrl = baseUrl ? baseUrl.replace(/'/g, "''") : '';
+    const escapedModel = model ? model.replace(/'/g, "''") : '';
+    const cdCommand = workdir ? `cd '${workdir.replace(/'/g, "''")}';` : '';
+    
     const psCommand = `
       Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force;
-      $env:OPENAI_API_KEY = [Environment]::GetEnvironmentVariable('OPENAI_API_KEY', 'User');
-      $env:OPENAI_BASE_URL = [Environment]::GetEnvironmentVariable('OPENAI_BASE_URL', 'User');
-      $env:OPENAI_MODEL = [Environment]::GetEnvironmentVariable('OPENAI_MODEL', 'User');
+      $env:OPENAI_API_KEY = '${escapedApiKey}';
+      $env:OPENAI_BASE_URL = '${escapedBaseUrl}';
+      $env:OPENAI_MODEL = '${escapedModel}';
+      ${cdCommand}
+      Write-Host 'OpenAI Mode - Starting Qwen Code...' -ForegroundColor Green;
+      Write-Host "Base URL: $env:OPENAI_BASE_URL" -ForegroundColor Yellow;
+      Write-Host "Model: $env:OPENAI_MODEL" -ForegroundColor Yellow;
       qwen
     `.replace(/\n/g, ' ');
     
@@ -221,7 +307,121 @@ ipcMain.handle('launch-qwen', async () => {
       shell: true
     });
     child.unref();
-    setTimeout(() => resolve('已在新窗口启动 Qwen Code'), 500);
+    setTimeout(() => resolve('已在新窗口启动 Qwen Code (OpenAI 模式)'), 500);
+  });
+});
+
+// 启动 Qwen Code (OAuth 模式) - 使用阿里云百炼 OAuth 认证（每天 2000 次免费）
+ipcMain.handle('launch-qwen-oauth', async (event, options = {}) => {
+  const { spawn } = require('child_process');
+  const fs = require('fs');
+  const path = require('path');
+  const workdir = options.workdir || '';
+  
+  // 修改 Qwen Code 的 settings.json，将认证类型改为 qwen-oauth
+  const settingsPath = path.join(process.env.USERPROFILE, '.qwen', 'settings.json');
+  try {
+    if (fs.existsSync(settingsPath)) {
+      const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+      if (settings.security && settings.security.auth) {
+        settings.security.auth.selectedType = 'qwen-oauth';
+        fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+      }
+    }
+  } catch (e) {
+    console.error('修改 Qwen settings.json 失败:', e);
+  }
+  
+  return new Promise((resolve) => {
+    const cdCommand = workdir ? `cd '${workdir.replace(/'/g, "''")}';` : '';
+    
+    const psCommand = `
+      Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force;
+      Remove-Item Env:OPENAI_API_KEY -ErrorAction SilentlyContinue;
+      Remove-Item Env:OPENAI_BASE_URL -ErrorAction SilentlyContinue;
+      Remove-Item Env:OPENAI_MODEL -ErrorAction SilentlyContinue;
+      ${cdCommand}
+      Write-Host 'OAuth Mode - Starting Qwen Code (2000 free calls/day)...' -ForegroundColor Green;
+      qwen
+    `.replace(/\n/g, ' ');
+    
+    const child = spawn('powershell', ['-NoExit', '-Command', psCommand], {
+      detached: true,
+      stdio: 'ignore',
+      shell: true
+    });
+    child.unref();
+    setTimeout(() => resolve('已在新窗口启动 Qwen Code (OAuth)'), 500);
+  });
+});
+
+// 启动 Codex CLI (在新终端窗口，用于 ModelScope 等 OpenAI 兼容服务)
+ipcMain.handle('launch-codex', async (event, options = {}) => {
+  const { spawn } = require('child_process');
+  return new Promise((resolve) => {
+    // 获取参数
+    const model = options.model || '';
+    const baseUrl = options.baseUrl || '';
+    const apiKey = options.apiKey || '';
+    
+    // PowerShell 命令：设置执行策略，设置环境变量，然后启动 codex
+    // 使用 -c 参数配置 model_provider 为 openai
+    const psCommand = `
+      Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force;
+      $env:OPENAI_API_KEY = '${apiKey}';
+      $env:OPENAI_BASE_URL = '${baseUrl}';
+      codex -c model_provider="openai" --model "${model}"
+    `.replace(/\n/g, ' ');
+    
+    const child = spawn('powershell', ['-NoExit', '-Command', psCommand], {
+      detached: true,
+      stdio: 'ignore',
+      shell: true
+    });
+    child.unref();
+    setTimeout(() => resolve('已在新窗口启动 Codex'), 500);
+  });
+});
+
+// 安装 Codex CLI
+ipcMain.handle('install-codex', async () => {
+  return new Promise((resolve, reject) => {
+    exec('npm install -g @openai/codex', {
+      timeout: 300000
+    }, (error, stdout, stderr) => {
+      if (error) {
+        reject('安装失败: ' + error.message);
+      } else {
+        resolve('✓ Codex CLI 安装成功！');
+      }
+    });
+  });
+});
+
+// 配置 OpenAI 兼容环境变量 (用于 ModelScope 等)
+ipcMain.handle('config-openai-compatible', async (event, config) => {
+  const commands = [];
+  
+  if (config.apiKey) {
+    commands.push(`[Environment]::SetEnvironmentVariable('OPENAI_API_KEY', '${config.apiKey}', 'User')`);
+  }
+  if (config.baseUrl) {
+    commands.push(`[Environment]::SetEnvironmentVariable('OPENAI_BASE_URL', '${config.baseUrl}', 'User')`);
+  }
+  if (config.model) {
+    commands.push(`[Environment]::SetEnvironmentVariable('OPENAI_MODEL', '${config.model}', 'User')`);
+  }
+  
+  const script = commands.join('; ');
+  
+  return new Promise((resolve, reject) => {
+    exec(`powershell -Command "${script}"`, (error, stdout, stderr) => {
+      if (error) {
+        reject(error.message);
+      } else {
+        resolve('OpenAI 兼容配置已保存！');
+      }
+    });
   });
 });
 

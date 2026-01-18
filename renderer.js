@@ -37,28 +37,40 @@ const PROVIDERS = {
   qwen: {
     name: '通义千问',
     baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-    note: '推荐使用 Qwen Code CLI 工具获得最佳体验',
+    note: '支持 OAuth（免费）和 OpenAI 认证',
+    authModes: [
+      { id: 'oauth', name: 'OAuth 认证（每天 2000 次免费）' },
+      { id: 'openai', name: 'OpenAI 兼容（需要 API Key）' }
+    ],
+    modelsByAuth: {
+      oauth: [
+        { id: 'coder-model', name: 'Coder Model（最新版本）' },
+        { id: 'vision-model', name: 'Vision Model（视觉）' }
+      ],
+      openai: [
+        { id: 'qwen3-coder-plus', name: 'Qwen3 Coder Plus (推荐)' },
+        { id: 'qwen3-coder', name: 'Qwen3 Coder' },
+        { id: 'qwen-max', name: 'Qwen Max' },
+        { id: 'qwen-plus', name: 'Qwen Plus' },
+        { id: 'qwen-turbo', name: 'Qwen Turbo' },
+        { id: 'qwen2.5-coder-32b-instruct', name: 'Qwen2.5 Coder 32B' }
+      ]
+    },
     models: [
-      { id: 'qwen3-coder-plus', name: 'Qwen3 Coder Plus (推荐)' },
-      { id: 'qwen3-coder', name: 'Qwen3 Coder' },
-      { id: 'qwen-max', name: 'Qwen Max' },
-      { id: 'qwen-plus', name: 'Qwen Plus' },
-      { id: 'qwen-turbo', name: 'Qwen Turbo' },
-      { id: 'qwen2.5-coder-32b-instruct', name: 'Qwen2.5 Coder 32B' }
+      { id: 'coder-model', name: 'Coder Model（OAuth 免费）' }
     ]
   },
   modelscope: {
     name: 'ModelScope',
-    baseUrl: 'https://api-inference.modelscope.cn',
-    note: '⚠️ 暂不推荐：Anthropic API 兼容性不完整，max_tokens 限制 8192',
-    notRecommended: true,
+    baseUrl: 'https://api-inference.modelscope.cn/v1/',
+    note: '使用 Qwen Code',
     models: [
-      { id: 'Qwen/Qwen2.5-7B-Instruct', name: 'Qwen2.5-7B' },
-      { id: 'Qwen/Qwen2.5-14B-Instruct', name: 'Qwen2.5-14B' },
-      { id: 'Qwen/Qwen2.5-32B-Instruct', name: 'Qwen2.5-32B' },
-      { id: 'Qwen/Qwen2.5-72B-Instruct', name: 'Qwen2.5-72B' },
+      { id: 'Qwen/Qwen2.5-Coder-32B-Instruct', name: 'Qwen2.5-Coder-32B (推荐)' },
       { id: 'Qwen/Qwen2.5-Coder-7B-Instruct', name: 'Qwen2.5-Coder-7B' },
-      { id: 'Qwen/Qwen2.5-Coder-32B-Instruct', name: 'Qwen2.5-Coder-32B' }
+      { id: 'Qwen/Qwen2.5-72B-Instruct', name: 'Qwen2.5-72B' },
+      { id: 'Qwen/Qwen2.5-32B-Instruct', name: 'Qwen2.5-32B' },
+      { id: 'Qwen/Qwen2.5-14B-Instruct', name: 'Qwen2.5-14B' },
+      { id: 'Qwen/Qwen2.5-7B-Instruct', name: 'Qwen2.5-7B' }
     ]
   },
   cloudflare: {
@@ -97,6 +109,43 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadHistoryList();
   setupModalListeners();
 });
+
+// 只更新状态显示，不重置表单
+async function updateStatusDisplay() {
+  const config = await ipcRenderer.invoke('get-config');
+  
+  let providerName = '-';
+  let modelName = '-';
+  
+  if (config.baseUrl) {
+    if (config.baseUrl.includes('deepseek')) {
+      providerName = 'DeepSeek';
+    } else if (config.baseUrl.includes('volces.com') || config.baseUrl.includes('volcengine')) {
+      providerName = '豆包';
+    } else if (config.baseUrl.includes('moonshot.cn')) {
+      providerName = 'Kimi';
+    } else if (config.baseUrl.includes('dashscope.aliyuncs.com')) {
+      providerName = '通义千问';
+    } else if (config.baseUrl.includes('bigmodel.cn')) {
+      providerName = '智谱AI';
+    } else if (config.baseUrl.includes('modelscope')) {
+      providerName = 'ModelScope';
+    } else if (config.baseUrl.includes('workers.dev') || config.baseUrl.includes('cloudflare')) {
+      providerName = 'Cloudflare';
+    } else {
+      providerName = '自定义网关';
+    }
+  } else if (config.model) {
+    providerName = 'Anthropic';
+  }
+  
+  if (config.model) {
+    modelName = config.model;
+  }
+  
+  document.getElementById('current-provider').textContent = providerName;
+  document.getElementById('current-model').textContent = modelName;
+}
 
 async function loadCurrentConfig() {
   const config = await ipcRenderer.invoke('get-config');
@@ -213,8 +262,20 @@ function setupEventListeners() {
     configQwenBtn.addEventListener('click', configQwenCode);
   }
   
+  // 安装 Codex CLI
+  const installCodexBtn = document.getElementById('install-codex-btn');
+  if (installCodexBtn) {
+    installCodexBtn.addEventListener('click', installCodex);
+  }
+  
   // 清空历史
   document.getElementById('clear-history-btn').addEventListener('click', clearHistory);
+  
+  // 选择工作目录
+  const workdirBtn = document.getElementById('workdir-btn');
+  if (workdirBtn) {
+    workdirBtn.addEventListener('click', selectWorkdir);
+  }
   
   // 外部链接按钮
   document.querySelectorAll('button[data-url]').forEach(btn => {
@@ -441,27 +502,18 @@ async function configQwenCode() {
     return;
   }
   
-  showLoading('正在应用 Qwen Code 配置...');
+  showLoading('正在启动 Qwen Code...');
   try {
-    await ipcRenderer.invoke('config-qwen-code', {
+    await ipcRenderer.invoke('launch-qwen', {
       apiKey,
       model,
       baseUrl
     });
-    
-    // 配置成功后启动 Qwen Code
-    showLoading('正在启动 Qwen Code...');
-    try {
-      await ipcRenderer.invoke('launch-qwen');
-      hideLoading();
-      showQwenMessage('配置已应用，Qwen Code 已启动', 'success');
-    } catch (launchError) {
-      hideLoading();
-      showQwenMessage('配置已保存，启动失败: ' + launchError, 'success');
-    }
+    hideLoading();
+    showQwenMessage('配置已应用，Qwen Code 已启动', 'success');
   } catch (error) {
     hideLoading();
-    showQwenMessage('配置失败: ' + error, 'error');
+    showQwenMessage('启动失败: ' + error, 'error');
   }
 }
 
@@ -477,6 +529,34 @@ function showQwenMessage(text, type) {
   }
 }
 
+// Codex CLI 安装
+async function installCodex() {
+  showLoading('正在安装 Codex CLI，请稍候...');
+  try {
+    const result = await ipcRenderer.invoke('install-codex');
+    hideLoading();
+    showCodexMessage(result, 'success');
+  } catch (error) {
+    hideLoading();
+    showCodexMessage(String(error), 'error');
+  }
+}
+
+// Codex 页面消息显示
+function showCodexMessage(text, type) {
+  const msg = document.getElementById('codex-message');
+  if (msg) {
+    msg.textContent = text;
+    msg.className = 'message ' + type;
+    setTimeout(() => {
+      msg.className = 'message';
+    }, 8000);
+  }
+}
+
+// 当前选择的认证方式
+let currentAuthMode = 'oauth';
+
 function selectProvider(providerId) {
   currentProvider = providerId;
   const provider = PROVIDERS[providerId];
@@ -489,24 +569,57 @@ function selectProvider(providerId) {
   // 显示配置区域
   document.getElementById('config-section').style.display = 'block';
   
-  // 更新模型列表
-  const modelSelect = document.getElementById('model-select');
-  // 添加预设模型和自定义模型选项
-  let modelOptions = provider.models.map(m => 
-    `<option value="${m.id}">${m.name}</option>`
-  ).join('');
-  modelOptions += '<option value="__custom__">-- 自定义模型 --</option>';
-  modelSelect.innerHTML = modelOptions;
-  
   // 显示/隐藏特有配置
   const cfConfig = document.getElementById('cloudflare-config');
   const apiKeyGroup = document.getElementById('api-key-group');
   const customModelGroup = document.getElementById('custom-model-group');
+  const authModeGroup = document.getElementById('auth-mode-group');
+  const modelSelect = document.getElementById('model-select');
+  const authModeSelect = document.getElementById('auth-mode-select');
   
   cfConfig.style.display = 'none';
   apiKeyGroup.style.display = 'block';
   apiKeyGroup.querySelector('label').textContent = 'API Key';
   customModelGroup.style.display = 'none';
+  authModeGroup.style.display = 'none';
+  
+  // 通义千问：显示认证方式选择
+  if (providerId === 'qwen' && provider.authModes) {
+    authModeGroup.style.display = 'block';
+    
+    // 填充认证方式选项
+    authModeSelect.innerHTML = provider.authModes.map(m => 
+      `<option value="${m.id}">${m.name}</option>`
+    ).join('');
+    
+    // 默认选择 OAuth
+    currentAuthMode = 'oauth';
+    updateQwenModels(provider);
+    
+    // OAuth 模式不需要 API Key
+    apiKeyGroup.style.display = 'none';
+    
+    // 监听认证方式变化
+    authModeSelect.onchange = function() {
+      currentAuthMode = this.value;
+      updateQwenModels(provider);
+      
+      // 根据认证方式显示/隐藏 API Key
+      if (currentAuthMode === 'oauth') {
+        apiKeyGroup.style.display = 'none';
+      } else {
+        apiKeyGroup.style.display = 'block';
+        apiKeyGroup.querySelector('label').textContent = '百炼 API Key';
+      }
+    };
+  } else {
+    // 其他服务商：使用默认模型列表
+    let modelOptions = provider.models.map(m => 
+      `<option value="${m.id}">${m.name}</option>`
+    ).join('');
+    modelOptions += '<option value="__custom__">-- 自定义模型 --</option>';
+    modelSelect.innerHTML = modelOptions;
+  }
   
   if (providerId === 'cloudflare') {
     cfConfig.style.display = 'block';
@@ -522,8 +635,25 @@ function selectProvider(providerId) {
       customModelGroup.style.display = 'block';
     } else {
       customModelGroup.style.display = 'none';
-  }
+    }
   };
+}
+
+// 更新通义千问的模型列表
+function updateQwenModels(provider) {
+  const modelSelect = document.getElementById('model-select');
+  const models = provider.modelsByAuth[currentAuthMode] || provider.models;
+  
+  let modelOptions = models.map(m => 
+    `<option value="${m.id}">${m.name}</option>`
+  ).join('');
+  
+  // OpenAI 模式允许自定义模型
+  if (currentAuthMode === 'openai') {
+    modelOptions += '<option value="__custom__">-- 自定义模型 --</option>';
+  }
+  
+  modelSelect.innerHTML = modelOptions;
 }
 
 function cleanUrl(url) {
@@ -536,6 +666,18 @@ function cleanUrl(url) {
   return url;
 }
 
+// 选择工作目录
+async function selectWorkdir() {
+  try {
+    const dir = await ipcRenderer.invoke('select-directory');
+    if (dir) {
+      document.getElementById('workdir-path').value = dir;
+    }
+  } catch (error) {
+    showMessage('选择目录失败: ' + error, 'error');
+  }
+}
+
 async function applyConfig() {
   if (!currentProvider) {
     showMessage('请先选择服务商', 'error');
@@ -545,6 +687,15 @@ async function applyConfig() {
   const provider = PROVIDERS[currentProvider];
   let model = document.getElementById('model-select').value;
   const apiKey = document.getElementById('api-key').value;
+  
+  // 对于通义千问，直接从 DOM 读取当前认证方式（确保获取最新值）
+  if (currentProvider === 'qwen') {
+    const authModeSelect = document.getElementById('auth-mode-select');
+    if (authModeSelect) {
+      currentAuthMode = authModeSelect.value;
+      console.log('当前认证方式:', currentAuthMode);
+    }
+  }
   
   // 如果选择了自定义模型，使用自定义模型输入框的值
   if (model === '__custom__') {
@@ -557,6 +708,9 @@ async function applyConfig() {
   }
   let gateway = document.getElementById('unified-gateway').value;
   gateway = cleanUrl(gateway);
+  
+  // 获取工作目录
+  const workdir = document.getElementById('workdir-path').value.trim();
   
   let config = {
     model: model,
@@ -585,6 +739,10 @@ async function applyConfig() {
     // 如果设置了统一网关，使用网关地址；否则使用官方默认地址
     config.baseUrl = gateway || '';
     config.authToken = apiKey;
+  } else if (currentProvider === 'qwen' && currentAuthMode === 'oauth') {
+    // 通义千问 OAuth 模式不需要 API Key
+    config.baseUrl = '';
+    config.authToken = 'qwen-oauth';
   } else {
     if (!apiKey) {
       showMessage('请输入 API Key', 'error');
@@ -596,33 +754,70 @@ async function applyConfig() {
   }
   
   showLoading('正在应用配置...');
+  
+  // 保存当前认证方式（在 loadCurrentConfig 之前，因为 loadCurrentConfig 会重置它）
+  const savedAuthMode = currentAuthMode;
+  const savedProvider = currentProvider;
+  
   try {
     const result = await ipcRenderer.invoke('apply-config', config);
-    await loadCurrentConfig();
+    await updateStatusDisplay();  // 只更新状态显示，不重置表单
     
-    // 保存到历史配置（包含网关信息）
+    // 保存到历史配置（包含网关信息和认证方式）
     saveToHistory({
-      providerId: currentProvider,
+      providerId: savedProvider,
       providerName: provider.name,
       model: model,
       baseUrl: config.baseUrl,
       authToken: config.authToken,
       gateway: gateway || '',  // 保存统一网关配置
+      authMode: savedProvider === 'qwen' ? savedAuthMode : null,  // 保存认证方式
+      workdir: workdir || '',  // 保存工作目录
       timestamp: Date.now()
     });
     
-    // 根据服务商类型选择启动 Claude Code 或 Qwen Code
-    if (currentProvider === 'qwen') {
-      // 通义千问使用 Qwen Code，需要同时配置 OPENAI 环境变量
-      showLoading('正在配置 Qwen Code...');
+    // 根据服务商类型选择启动对应的 CLI 工具
+    if (savedProvider === 'qwen') {
+      console.log('启动前认证方式:', savedAuthMode);
+      
+      if (savedAuthMode === 'oauth') {
+        // 通义千问 OAuth 模式（每天 2000 次免费）
+        showLoading('正在启动 Qwen Code (OAuth)...');
+        try {
+          await ipcRenderer.invoke('launch-qwen-oauth', { workdir });
+          hideLoading();
+          showMessage('Qwen Code 已启动（OAuth 模式，每天 2000 次免费）', 'success');
+        } catch (launchError) {
+          hideLoading();
+          showMessage('启动失败: ' + launchError, 'error');
+        }
+      } else {
+        // 通义千问 OpenAI 兼容模式
+        showLoading('正在启动 Qwen Code...');
+        try {
+          await ipcRenderer.invoke('launch-qwen', {
+            apiKey: apiKey,
+            model: model,
+            baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+            workdir
+          });
+          hideLoading();
+          showMessage('配置已应用，Qwen Code 已启动', 'success');
+        } catch (launchError) {
+          hideLoading();
+          showMessage('配置已应用 (启动失败: ' + launchError + ')', 'success');
+        }
+      }
+    } else if (savedProvider === 'modelscope') {
+      // ModelScope 使用 Qwen Code (OpenAI 兼容)
+      showLoading('正在启动 Qwen Code...');
       try {
-        await ipcRenderer.invoke('config-qwen-code', {
+        await ipcRenderer.invoke('launch-qwen', {
           apiKey: apiKey,
           model: model,
-          baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+          baseUrl: 'https://api-inference.modelscope.cn/v1/',
+          workdir
         });
-        showLoading('正在启动 Qwen Code...');
-        await ipcRenderer.invoke('launch-qwen');
         hideLoading();
         showMessage('配置已应用，Qwen Code 已启动', 'success');
       } catch (launchError) {
@@ -633,7 +828,7 @@ async function applyConfig() {
       // 其他服务商启动 Claude Code
       showLoading('正在启动 Claude Code...');
       try {
-        await ipcRenderer.invoke('launch-claude');
+        await ipcRenderer.invoke('launch-claude', { workdir });
         hideLoading();
         showMessage('配置已应用，Claude Code 已启动', 'success');
       } catch (launchError) {
@@ -735,13 +930,34 @@ function loadHistoryList() {
     return;
   }
   
-  container.innerHTML = history.map((item, index) => `
+  container.innerHTML = history.map((item, index) => {
+    // 确定 CLI 工具和认证方式
+    let cliTool = 'Claude';
+    let authInfo = '';
+    
+    if (item.providerId === 'qwen') {
+      cliTool = 'Qwen';
+      authInfo = item.authMode === 'oauth' ? 'OAuth' : 'API';
+    } else if (item.providerId === 'modelscope') {
+      cliTool = 'Qwen';
+      authInfo = 'API';
+    } else {
+      cliTool = 'Claude';
+      authInfo = item.gateway ? '网关' : 'API';
+    }
+    
+    const workdirDisplay = item.workdir ? `<div class="workdir-info" title="${item.workdir}">${item.workdir.split(/[/\\]/).pop()}</div>` : '';
+    
+    return `
     <div class="history-item" data-index="${index}">
-      <div class="provider-name">${item.providerName}${item.gateway ? ' [网关]' : ''}</div>
+      <div class="provider-name">${item.providerName}</div>
       <div class="model-name">${item.model}</div>
+      <div class="cli-info">${cliTool} | ${authInfo}</div>
+      ${workdirDisplay}
       <div class="time">${formatTime(item.timestamp)}</div>
     </div>
-  `).join('');
+  `;
+  }).join('');
   
   // 绑定点击事件
   container.querySelectorAll('.history-item').forEach(el => {
@@ -799,6 +1015,40 @@ function showConfirmModal(config) {
     </div>`;
   }
   
+  // 确定 CLI 工具和认证方式
+  let cliTool = 'Claude Code';
+  let authInfo = 'API Key';
+  
+  if (config.providerId === 'qwen') {
+    cliTool = 'Qwen Code';
+    authInfo = config.authMode === 'oauth' ? 'OAuth (免费额度)' : 'OpenAI 兼容 (API Key)';
+  } else if (config.providerId === 'modelscope') {
+    cliTool = 'Qwen Code';
+    authInfo = 'OpenAI 兼容 (API Key)';
+  } else {
+    cliTool = 'Claude Code';
+    authInfo = config.gateway ? '统一网关' : 'Anthropic API';
+  }
+  
+  let cliToolRow = `
+    <div class="detail-row">
+      <span class="detail-label">CLI 工具</span>
+      <span class="detail-value">${cliTool}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">认证方式</span>
+      <span class="detail-value">${authInfo}</span>
+    </div>`;
+  
+  let workdirRow = '';
+  if (config.workdir) {
+    workdirRow = `
+    <div class="detail-row">
+      <span class="detail-label">工作目录</span>
+      <span class="detail-value" style="font-size: 10px; word-break: break-all;">${config.workdir}</span>
+    </div>`;
+  }
+  
   details.innerHTML = `
     <div class="detail-row">
       <span class="detail-label">服务商</span>
@@ -808,7 +1058,9 @@ function showConfirmModal(config) {
       <span class="detail-label">模型</span>
       <span class="detail-value">${config.model}</span>
     </div>
+    ${cliToolRow}
     ${gatewayRow}
+    ${workdirRow}
     <div class="detail-row">
       <span class="detail-label">配置时间</span>
       <span class="detail-value">${formatTime(config.timestamp)}</span>
@@ -849,6 +1101,17 @@ async function confirmSwitch() {
     // 选中正确的服务商
     if (config.providerId) {
       selectProvider(config.providerId);
+      
+      // 如果是通义千问，设置正确的认证方式
+      if (config.providerId === 'qwen' && config.authMode) {
+        const authModeSelect = document.getElementById('auth-mode-select');
+        if (authModeSelect) {
+          authModeSelect.value = config.authMode;
+          // 触发 onchange 事件来更新模型列表和 API Key 显示
+          authModeSelect.dispatchEvent(new Event('change'));
+        }
+      }
+      
       // 设置模型选择
       if (config.model) {
         const modelSelect = document.getElementById('model-select');
@@ -861,6 +1124,12 @@ async function confirmSwitch() {
       }
     }
     
+    // 设置工作目录
+    const workdirInput = document.getElementById('workdir-path');
+    if (workdirInput) {
+      workdirInput.value = config.workdir || '';
+    }
+    
     // 更新当前配置显示
     document.getElementById('current-provider').textContent = config.providerName + (config.gateway ? ' [网关]' : '');
     document.getElementById('current-model').textContent = config.model;
@@ -871,18 +1140,48 @@ async function confirmSwitch() {
       timestamp: Date.now()
     });
     
-    // 根据服务商类型选择启动 Claude Code 或 Qwen Code
+    // 根据服务商类型选择启动对应的 CLI 工具
+    const workdir = config.workdir || '';
+    
     if (config.providerId === 'qwen') {
-      // 通义千问使用 Qwen Code
-      showLoading('正在配置 Qwen Code...');
+      if (config.authMode === 'openai') {
+        // 通义千问 OpenAI 兼容模式
+        showLoading('正在启动 Qwen Code...');
+        try {
+          await ipcRenderer.invoke('launch-qwen', {
+            apiKey: config.authToken,
+            model: config.model,
+            baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+            workdir
+          });
+          hideLoading();
+          showMessage('已切换到: ' + config.providerName + '，Qwen Code 已启动', 'success');
+        } catch (launchError) {
+          hideLoading();
+          showMessage('已切换到: ' + config.providerName + ' (启动失败)', 'success');
+        }
+      } else {
+        // 通义千问 OAuth 模式
+        showLoading('正在启动 Qwen Code (OAuth)...');
+        try {
+          await ipcRenderer.invoke('launch-qwen-oauth', { workdir });
+          hideLoading();
+          showMessage('已切换到: ' + config.providerName + '，Qwen Code 已启动（OAuth）', 'success');
+        } catch (launchError) {
+          hideLoading();
+          showMessage('已切换到: ' + config.providerName + ' (启动失败)', 'success');
+        }
+      }
+    } else if (config.providerId === 'modelscope') {
+      // ModelScope 使用 Qwen Code
+      showLoading('正在启动 Qwen Code...');
       try {
-        await ipcRenderer.invoke('config-qwen-code', {
+        await ipcRenderer.invoke('launch-qwen', {
           apiKey: config.authToken,
           model: config.model,
-          baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+          baseUrl: 'https://api-inference.modelscope.cn/v1/',
+          workdir
         });
-        showLoading('正在启动 Qwen Code...');
-        await ipcRenderer.invoke('launch-qwen');
         hideLoading();
         showMessage('已切换到: ' + config.providerName + '，Qwen Code 已启动', 'success');
       } catch (launchError) {
@@ -893,7 +1192,7 @@ async function confirmSwitch() {
       // 其他服务商启动 Claude Code
       showLoading('正在启动 Claude Code...');
       try {
-        await ipcRenderer.invoke('launch-claude');
+        await ipcRenderer.invoke('launch-claude', { workdir });
         hideLoading();
         showMessage('已切换到: ' + config.providerName + '，Claude Code 已启动', 'success');
       } catch (launchError) {

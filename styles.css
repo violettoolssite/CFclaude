@@ -291,6 +291,33 @@ select.input-field option {
   width: 100%;
 }
 
+/* 工作目录选择 */
+.workdir-row {
+  display: flex;
+  gap: 8px;
+}
+
+.workdir-row .input-field {
+  flex: 1;
+}
+
+.btn-icon-text {
+  padding: 8px 16px;
+  background: #252525;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #c8ff00;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-icon-text:hover {
+  background: #333;
+  border-color: #c8ff00;
+}
+
 /* 操作按钮 */
 .action-buttons {
   display: flex;
@@ -518,7 +545,7 @@ select.input-field option {
 
 /* 右侧历史配置栏 */
 .history-sidebar {
-  width: 240px;
+  width: 280px;
   background: #0f0f0f;
   border-left: 1px solid #1a1a1a;
   display: flex;
@@ -599,6 +626,28 @@ select.input-field option {
 .history-item .model-name {
   font-size: 11px;
   color: #888;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-item .cli-info {
+  font-size: 11px;
+  color: #c8ff00;
+  background: rgba(200, 255, 0, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 6px;
+}
+
+.history-item .workdir-info {
+  font-size: 10px;
+  color: #888;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

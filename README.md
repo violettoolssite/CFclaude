@@ -25,9 +25,9 @@ CFclaude 是一款 Windows 桌面工具，用于快速切换 Claude Code 和 Qwe
 | DeepSeek | api.deepseek.com | deepseek-chat | Claude Code | 编程能力强，性价比高 |
 | 豆包 | ark.cn-beijing.volces.com | doubao-seed-code | Claude Code | 视觉理解，原生兼容 |
 | Kimi | api.moonshot.cn | kimi-k2 | Claude Code | 超长上下文 128K |
-| 通义千问 | dashscope.aliyuncs.com | qwen3-coder-plus | **Qwen Code** | 阿里云编程模型 |
+| 通义千问 | dashscope.aliyuncs.com | qwen3-coder-plus | **Qwen Code (OAuth)** | 每天 2000 次免费 |
 | 智谱AI | open.bigmodel.cn | glm-4.7 | Claude Code | 稳定可靠，中文优化 |
-| ModelScope | api-inference.modelscope.cn | Qwen2.5-72B | Claude Code | 魔搭社区 |
+| ModelScope | api-inference.modelscope.cn | Qwen2.5-Coder-32B | **Qwen Code** | 魔搭社区，OpenAI 兼容 |
 | Cloudflare | 自建 Worker | llama-3.1-8b | Claude Code | 完全免费 |
 | Anthropic | 官方 | claude-sonnet-4 | Claude Code | 官方 API |
 
@@ -48,22 +48,28 @@ CFclaude 是一款 Windows 桌面工具，用于快速切换 Claude Code 和 Qwe
 5. 点击「应用配置」
 6. **自动在新窗口启动 Claude Code**
 
-### Qwen Code 配置（通义千问专用）
+### Qwen Code 配置
 
-**方式一：从模型配置页面**
+**通义千问（OAuth 模式，推荐）**
 1. 选择「通义千问」
-2. 选择模型（推荐 qwen3-coder-plus）
-3. 输入百炼 API Key
-4. 点击「应用配置」
-5. **自动配置并启动 Qwen Code**
+2. 点击「应用配置」
+3. 自动启动 Qwen Code（OAuth 模式）
+4. 首次使用需扫码登录 Qwen Chat 账号
+5. **每天 2000 次免费调用额度**
 
-**方式二：从安装页面**
+**ModelScope（OpenAI 兼容模式）**
+1. 选择「ModelScope」
+2. 选择模型
+3. 输入 ModelScope Access Token
+4. 点击「应用配置」
+5. 自动配置 OPENAI 环境变量并启动 Qwen Code
+
+**从安装页面配置（自定义）**
 1. 点击侧边栏「安装 Qwen Code」
 2. 点击「安装 Qwen Code」按钮
 3. 输入百炼 API Key
 4. 选择模型和地域
-5. 点击「应用配置」
-6. **自动启动 Qwen Code**
+5. 点击「应用配置」启动
 
 ### Qwen Code 特点
 
@@ -71,6 +77,7 @@ CFclaude 是一款 Windows 桌面工具，用于快速切换 Claude Code 和 Qwe
 - 每天 2000 次免费 API 调用额度
 - 100 万 Token 免费额度（北京地域）
 - 启动命令：`qwen`
+
 
 ### 统一网关
 
