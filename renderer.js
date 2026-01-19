@@ -110,6 +110,133 @@ function switchToNextKey() {
   return decryptGatewayConfig();
 }
 
+// 密钥可用性状态
+const keyAvailabilityStatus = {
+  checking: false,
+  lastCheckTime: 0,
+  availableCount: -1,  // -1 表示未检测
+  checkedCount: 0,     // 已检测数量
+  totalCount: 6,
+  checkedKeys: [],  // 存储每个密钥的检测结果
+  
+  // 更新界面显示
+  updateDisplay() {
+    const statusEl = document.getElementById('key-availability-status');
+    const applyBtn = document.getElementById('apply-recommended-btn');
+    
+    if (!statusEl) return;
+    
+    if (this.checking) {
+      if (this.availableCount > 0) {
+        // 检测中但已有可用密钥
+        statusEl.textContent = '可用: ' + this.availableCount + ' (检测中 ' + this.checkedCount + '/' + this.totalCount + ')';
+        statusEl.className = 'key-status-bar available';
+        if (applyBtn) {
+          applyBtn.disabled = false;
+          applyBtn.textContent = '启动 Claude Code';
+        }
+      } else {
+        statusEl.textContent = '检测密钥可用性 ' + this.checkedCount + '/' + this.totalCount + '...';
+        statusEl.className = 'key-status-bar checking';
+      }
+    } else if (this.availableCount === -1) {
+      statusEl.textContent = '点击检测密钥';
+      statusEl.className = 'key-status-bar unknown';
+    } else if (this.availableCount === 0) {
+      statusEl.textContent = '当前服务已不可用';
+      statusEl.className = 'key-status-bar unavailable';
+      if (applyBtn) {
+        applyBtn.disabled = true;
+        applyBtn.textContent = '服务不可用';
+      }
+    } else {
+      statusEl.textContent = '可用密钥: ' + this.availableCount + '/' + this.totalCount;
+      statusEl.className = 'key-status-bar available';
+      if (applyBtn) {
+        applyBtn.disabled = false;
+        applyBtn.textContent = '启动 Claude Code';
+      }
+    }
+  }
+};
+
+// 检测单个密钥是否可用（带实时更新）
+async function testSingleKeyWithUpdate(baseUrl, authToken, keyIndex) {
+  try {
+    const result = await ipcRenderer.invoke('test-api-key', {
+      baseUrl: baseUrl,
+      authToken: authToken
+    });
+    const available = result.success;
+    
+    // 实时更新状态
+    keyAvailabilityStatus.checkedCount++;
+    if (available) {
+      keyAvailabilityStatus.availableCount = (keyAvailabilityStatus.availableCount === -1 ? 1 : keyAvailabilityStatus.availableCount + 1);
+    }
+    keyAvailabilityStatus.updateDisplay();
+    
+    return { keyIndex, available };
+  } catch (e) {
+    keyAvailabilityStatus.checkedCount++;
+    keyAvailabilityStatus.updateDisplay();
+    return { keyIndex, available: false };
+  }
+}
+
+// 检测所有密钥的可用性
+async function checkAllKeysAvailability() {
+  if (keyAvailabilityStatus.checking) return;
+  
+  // 5分钟内不重复检测
+  if (Date.now() - keyAvailabilityStatus.lastCheckTime < 5 * 60 * 1000 && keyAvailabilityStatus.availableCount !== -1) {
+    return;
+  }
+  
+  // 重置状态
+  keyAvailabilityStatus.checking = true;
+  keyAvailabilityStatus.checkedCount = 0;
+  keyAvailabilityStatus.availableCount = 0;
+  keyAvailabilityStatus.updateDisplay();
+  
+  const enc = RECOMMENDED_GATEWAY._encrypted;
+  const baseUrl = xorDecrypt(enc.baseUrl, enc.xorKey);
+  
+  if (!baseUrl) {
+    keyAvailabilityStatus.checking = false;
+    keyAvailabilityStatus.availableCount = 0;
+    keyAvailabilityStatus.updateDisplay();
+    return;
+  }
+  
+  // 并行检测所有密钥（每个检测完成后实时更新）
+  const promises = enc.authTokens.map((encToken, index) => {
+    const authToken = xorDecrypt(encToken, enc.xorKey);
+    return testSingleKeyWithUpdate(baseUrl, authToken, index);
+  });
+  
+  try {
+    const results = await Promise.all(promises);
+    keyAvailabilityStatus.checkedKeys = results;
+    
+    // 同步更新负载均衡器的失败状态
+    keyLoadBalancer.failedKeys.clear();
+    results.forEach(r => {
+      if (!r.available) {
+        keyLoadBalancer.failedKeys.add(r.keyIndex);
+      }
+    });
+    keyLoadBalancer.lastResetTime = Date.now();
+    
+  } catch (e) {
+    // 错误已在单个检测中处理
+  }
+  
+  keyAvailabilityStatus.checking = false;
+  keyAvailabilityStatus.lastCheckTime = Date.now();
+  keyAvailabilityStatus.updateDisplay();
+}
+
 // 掩码显示 API Key（全部显示为星号）
 function maskApiKey(key) {
   if (!key) return '******';
@@ -1113,6 +1240,11 @@ function switchView(viewId) {
   document.querySelectorAll('.sidebar-btn[data-view]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === viewId);
   });
+  
+  // 切换到推荐网关视图时检测密钥可用性
+  if (viewId === 'recommended-gateway' && currentGatewayMode === 'builtin') {
+    checkAllKeysAvailability();
+  }
 }
 
 async function installClaudeCode() {
@@ -1951,7 +2083,7 @@ function setupRecommendedGatewayListeners() {
   // 初始化显示掩码密钥
   const keyDisplay = document.getElementById('recommended-key-display');
   if (keyDisplay) {
-    keyDisplay.textContent = getDisplayKey() + ' (6个密钥)';
+    keyDisplay.textContent = getDisplayKey();
   }
   
   // 网关模式切换
@@ -1969,6 +2101,8 @@ function setupRecommendedGatewayListeners() {
       customCard.classList.remove('active');
       builtinConfig.style.display = 'block';
       customConfig.style.display = 'none';
+      // 切换到内置网关时检测密钥可用性
+      checkAllKeysAvailability();
     });
     
     modeCustom.addEventListener('change', () => {
@@ -2012,6 +2146,13 @@ async function applyRecommendedGateway() {
   
   if (currentGatewayMode === 'builtin') {
     // 内置网关模式
+    // 检查是否有可用密钥
+    if (keyAvailabilityStatus.availableCount === 0) {
+      messageEl.textContent = '当前服务已不可用，所有密钥均无法使用';
+      messageEl.className = 'message error';
+      return;
+    }
+    
     showLoading('正在获取可用密钥...');
     
     const decrypted = decryptGatewayConfig();

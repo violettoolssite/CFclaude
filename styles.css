@@ -1481,6 +1481,195 @@ select.input-field option {
   color: #ffd700;
 }
 
+/* 紧凑头部 */
+.main-header.compact {
+  margin-bottom: 12px;
+  padding-bottom: 0;
+}
+
+.main-header.compact h2 {
+  margin-bottom: 0;
+}
+
+/* 网关模式选择栏 */
+.gateway-mode-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mode-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+  color: #888;
+}
+
+.mode-tab input {
+  display: none;
+}
+
+.mode-tab.active {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-color: #ffd700;
+  color: #ffd700;
+}
+
+.mode-tab:hover {
+  border-color: #ffd700;
+  color: #ffd700;
+}
+
+/* 紧凑信息卡片 */
+.info-card-compact {
+  background: #0a0a0a;
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+
+.info-card-compact.recommended-border {
+  border-color: #ffd700;
+}
+
+.config-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #1a1a1a;
+  font-size: 13px;
+}
+
+.config-row:last-of-type {
+  border-bottom: none;
+}
+
+.config-row .config-label {
+  color: #666;
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.config-row .config-value {
+  color: #c8ff00;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+
+.config-row .config-value.masked {
+  color: #888;
+}
+
+/* 密钥状态栏 */
+.key-status-bar {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.key-status-bar.checking {
+  background: #1a1a2e;
+  color: #888;
+}
+
+.key-status-bar.unknown {
+  background: #1a1a2e;
+  color: #666;
+}
+
+.key-status-bar.available {
+  background: linear-gradient(135deg, #0a2010 0%, #0d2818 100%);
+  color: #4ade80;
+}
+
+.key-status-bar.unavailable {
+  background: linear-gradient(135deg, #2a0a0a 0%, #380d0d 100%);
+  color: #f87171;
+}
+
+/* 紧凑表单组 */
+.form-group-compact {
+  margin-bottom: 10px;
+}
+
+.form-group-compact label {
+  display: block;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+/* 链接提示 */
+.link-hint {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #666;
+}
+
+.link-hint a {
+  color: #c8ff00;
+}
+
+/* 启动配置行 */
+.launch-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+.launch-item {
+  flex: 1;
+}
+
+.launch-item label {
+  display: block;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+/* 旧版兼容 */
+.key-status-inline {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.key-status-inline.checking {
+  background: #1a1a2e;
+  color: #888;
+}
+
+.key-status-inline.unknown {
+  background: #1a1a2e;
+  color: #666;
+}
+
+.key-status-inline.available {
+  background: linear-gradient(135deg, #0a2010 0%, #0d2818 100%);
+  color: #4ade80;
+}
+
+.key-status-inline.unavailable {
+  background: linear-gradient(135deg, #2a0a0a 0%, #380d0d 100%);
+  color: #f87171;
+}
+
 .gateway-config-display {
   margin: 16px 0;
   background: #0a0a0a;
