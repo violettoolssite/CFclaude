@@ -34,6 +34,7 @@ CFclaude 是一款跨平台桌面工具，用于快速切换 Claude Code 和 Qwe
 | 通义千问 | dashscope.aliyuncs.com | qwen3-coder-plus | **Qwen Code (OAuth)** | 每天 2000 次免费 |
 | 智谱AI | open.bigmodel.cn | glm-4.7 | Claude Code | 稳定可靠，中文优化 |
 | ModelScope | api-inference.modelscope.cn | Qwen2.5-Coder-32B | **Qwen Code** | 魔搭社区，OpenAI 兼容 |
+| NVIDIA NIM | integrate.api.nvidia.com | Qwen2.5-Coder、DeepSeek R1 | **Qwen Code** | 企业级推理，多模型 |
 | Cloudflare | 自建 Worker | llama-3.1-8b | Claude Code | 完全免费 |
 | Anthropic | 官方 | claude-sonnet-4 | Claude Code | 官方 API |
 

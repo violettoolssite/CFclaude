@@ -279,6 +279,23 @@ select.input-field option {
   color: #0a0a0a;
 }
 
+.provider-btn.nvidia {
+  border-color: #76b900;
+  color: #76b900;
+}
+
+.provider-btn.nvidia:hover {
+  background: rgba(118, 185, 0, 0.1);
+  border-color: #8ed000;
+  color: #8ed000;
+}
+
+.provider-btn.nvidia.active {
+  background: linear-gradient(135deg, #76b900 0%, #8ed000 100%);
+  border-color: #76b900;
+  color: #0a0a0a;
+}
+
 .sidebar-btn.recommended-btn {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   border-color: #ffd700;

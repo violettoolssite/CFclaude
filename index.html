@@ -35,6 +35,7 @@
           <button class="sidebar-btn" data-view="api-qwen">通义千问</button>
           <button class="sidebar-btn" data-view="api-zhipu">智谱AI</button>
           <button class="sidebar-btn" data-view="api-modelscope">ModelScope</button>
+          <button class="sidebar-btn" data-view="api-nvidia">NVIDIA NIM</button>
           <button class="sidebar-btn" data-view="api-cloudflare">Cloudflare</button>
           <button class="sidebar-btn" data-view="api-anthropic">Anthropic</button>
         </div>
@@ -83,6 +84,7 @@
             <button class="provider-btn" data-provider="qwen">通义千问</button>
             <button class="provider-btn" data-provider="zhipu">智谱AI</button>
             <button class="provider-btn" data-provider="modelscope">ModelScope</button>
+            <button class="provider-btn nvidia" data-provider="nvidia">NVIDIA NIM</button>
             <button class="provider-btn" data-provider="cloudflare">Cloudflare</button>
             <button class="provider-btn" data-provider="anthropic">Anthropic</button>
           </div>
@@ -372,6 +374,35 @@
           <p style="margin-top: 8px;">如未安装 Qwen Code，请先前往「安装 Qwen Code」页面安装。</p>
         </div>
         <button class="btn-primary btn-large" style="margin-top: 20px;" data-url="https://modelscope.cn/my/myaccesstoken">获取 API Key</button>
+      </div>
+
+      <div id="view-api-nvidia" class="view">
+        <header class="main-header">
+          <h2>NVIDIA NIM</h2>
+          <p class="subtitle">NVIDIA 云端推理服务，支持多种开源模型</p>
+        </header>
+        <div class="info-card">
+          <h3>平台信息</h3>
+          <p>NVIDIA NIM 提供企业级云端模型推理服务，使用 OpenAI 兼容 API。</p>
+          <p>推荐模型：Qwen 2.5 Coder、DeepSeek R1、Llama 4</p>
+          <p>API 地址：integrate.api.nvidia.com</p>
+        </div>
+        <div class="info-card" style="margin-top: 16px;">
+          <h3>可用模型</h3>
+          <ul style="margin: 8px 0; padding-left: 20px; color: #888;">
+            <li>qwen/qwen2.5-coder-32b-instruct - 编程专用</li>
+            <li>deepseek-ai/deepseek-r1 - 推理模型</li>
+            <li>z-ai/glm4.7 - 智谱 GLM</li>
+            <li>minimaxai/minimax-m2.1 - MiniMax</li>
+            <li>meta/llama-4-maverick - Llama 4</li>
+          </ul>
+        </div>
+        <div class="info-card" style="margin-top: 16px; border-color: #76b900;">
+          <h3 style="color: #76b900;">使用 Qwen Code</h3>
+          <p>NVIDIA NIM 使用 OpenAI 兼容 API，配置后将自动启动 <strong>Qwen Code</strong>。</p>
+          <p style="margin-top: 8px;">如未安装 Qwen Code，请先前往「安装 Qwen Code」页面安装。</p>
+        </div>
+        <button class="btn-primary btn-large" style="margin-top: 20px; background: #76b900; border-color: #76b900;" data-url="https://build.nvidia.com/explore/discover">获取 API Key</button>
       </div>
 
       <div id="view-api-cloudflare" class="view">

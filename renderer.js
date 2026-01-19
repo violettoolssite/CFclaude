@@ -322,6 +322,21 @@ const PROVIDERS = {
       { id: 'Qwen/Qwen2.5-7B-Instruct', name: 'Qwen2.5-7B' }
     ]
   },
+  nvidia: {
+    name: 'NVIDIA NIM',
+    baseUrl: 'https://integrate.api.nvidia.com/v1',
+    note: '使用 Qwen Code',
+    models: [
+      { id: 'qwen/qwen2.5-coder-32b-instruct', name: 'Qwen 2.5 Coder 32B (推荐)' },
+      { id: 'deepseek-ai/deepseek-r1', name: 'DeepSeek R1 (推理)' },
+      { id: 'z-ai/glm4.7', name: 'GLM 4.7 (智谱)' },
+      { id: 'minimaxai/minimax-m2.1', name: 'MiniMax M2.1' },
+      { id: 'meta/llama-4-maverick-17b-128e-instruct', name: 'Llama 4 Maverick' },
+      { id: 'meta/llama-4-scout-17b-16e-instruct', name: 'Llama 4 Scout' },
+      { id: 'meta/llama-3.3-70b-instruct', name: 'Llama 3.3 70B' },
+      { id: 'nvidia/llama-3.1-nemotron-70b-instruct', name: 'Nemotron 70B' }
+    ]
+  },
   cloudflare: {
     name: 'Cloudflare',
     baseUrl: '',
