@@ -327,14 +327,11 @@ const PROVIDERS = {
     baseUrl: 'https://integrate.api.nvidia.com/v1',
     note: '使用 Qwen Code',
     models: [
-      { id: 'qwen/qwen2.5-coder-32b-instruct', name: 'Qwen 2.5 Coder 32B (推荐)' },
-      { id: 'deepseek-ai/deepseek-r1', name: 'DeepSeek R1 (推理)' },
-      { id: 'z-ai/glm4.7', name: 'GLM 4.7 (智谱)' },
+      { id: 'z-ai/glm4.7', name: 'GLM 4.7 智谱 (推荐)' },
       { id: 'minimaxai/minimax-m2.1', name: 'MiniMax M2.1' },
+      { id: 'deepseek-ai/deepseek-r1', name: 'DeepSeek R1 (推理)' },
       { id: 'meta/llama-4-maverick-17b-128e-instruct', name: 'Llama 4 Maverick' },
-      { id: 'meta/llama-4-scout-17b-16e-instruct', name: 'Llama 4 Scout' },
-      { id: 'meta/llama-3.3-70b-instruct', name: 'Llama 3.3 70B' },
-      { id: 'nvidia/llama-3.1-nemotron-70b-instruct', name: 'Nemotron 70B' }
+      { id: 'meta/llama-4-scout-17b-16e-instruct', name: 'Llama 4 Scout' }
     ]
   },
   cloudflare: {
@@ -934,6 +931,8 @@ async function updateStatusDisplay() {
       providerName = '智谱AI';
     } else if (config.baseUrl.includes('modelscope')) {
       providerName = 'ModelScope';
+    } else if (config.baseUrl.includes('nvidia') || config.baseUrl.includes('integrate.api')) {
+      providerName = 'NVIDIA NIM';
     } else if (config.baseUrl.includes('workers.dev') || config.baseUrl.includes('cloudflare')) {
       providerName = 'Cloudflare';
     } else {
@@ -979,6 +978,9 @@ async function loadCurrentConfig() {
     } else if (config.baseUrl.includes('modelscope')) {
       providerName = 'ModelScope';
       providerId = 'modelscope';
+    } else if (config.baseUrl.includes('nvidia') || config.baseUrl.includes('integrate.api')) {
+      providerName = 'NVIDIA NIM';
+      providerId = 'nvidia';
     } else if (config.baseUrl.includes('workers.dev') || config.baseUrl.includes('cloudflare')) {
       providerName = 'Cloudflare';
       providerId = 'cloudflare';
@@ -1661,6 +1663,24 @@ async function applyConfig() {
         hideLoading();
         showMessage('配置已应用 (启动失败: ' + launchError + ')', 'success');
       }
+    } else if (savedProvider === 'nvidia') {
+      // NVIDIA NIM 使用 Qwen Code (OpenAI 兼容)
+      showLoading('正在启动 Qwen Code...');
+      try {
+        await ipcRenderer.invoke('launch-qwen', {
+          apiKey: apiKey,
+          model: model,
+          baseUrl: 'https://integrate.api.nvidia.com/v1',
+          workdir
+        });
+        hideLoading();
+        showMessage('配置已应用，Qwen Code 已启动', 'success');
+        updateMonitorCliTool('Qwen Code');
+        if (workdir) autoStartMonitoring(workdir);
+      } catch (launchError) {
+        hideLoading();
+        showMessage('配置已应用 (启动失败: ' + launchError + ')', 'success');
+      }
     } else {
       // 其他服务商启动 Claude Code
       showLoading('正在启动 Claude Code...');
@@ -1780,6 +1800,9 @@ function loadHistoryList() {
     } else if (item.providerId === 'modelscope') {
       cliTool = 'Qwen';
       authInfo = 'API';
+    } else if (item.providerId === 'nvidia') {
+      cliTool = 'Qwen';
+      authInfo = 'NVIDIA NIM';
     } else {
       cliTool = 'Claude';
       authInfo = item.gateway ? '网关' : 'API';
@@ -1887,6 +1910,9 @@ function showConfirmModal(config) {
   } else if (config.providerId === 'modelscope') {
     cliTool = 'Qwen Code';
     authInfo = 'OpenAI 兼容 (API Key)';
+  } else if (config.providerId === 'nvidia') {
+    cliTool = 'Qwen Code';
+    authInfo = 'NVIDIA NIM (API Key)';
   } else if (config.providerId === 'recommended' || config.isRecommendedGateway) {
     cliTool = 'Claude Code';
     authInfo = '推荐网关 (内置密钥)';
@@ -2058,6 +2084,24 @@ async function confirmSwitch() {
           apiKey: config.authToken,
           model: config.model,
           baseUrl: 'https://api-inference.modelscope.cn/v1/',
+          workdir
+        });
+        hideLoading();
+        showMessage('已切换到: ' + config.providerName + '，Qwen Code 已启动', 'success');
+        updateMonitorCliTool('Qwen Code');
+        if (workdir) autoStartMonitoring(workdir);
+      } catch (launchError) {
+        hideLoading();
+        showMessage('已切换到: ' + config.providerName + ' (启动失败)', 'success');
+      }
+    } else if (config.providerId === 'nvidia') {
+      // NVIDIA NIM 使用 Qwen Code
+      showLoading('正在启动 Qwen Code...');
+      try {
+        await ipcRenderer.invoke('launch-qwen', {
+          apiKey: config.authToken,
+          model: config.model,
+          baseUrl: 'https://integrate.api.nvidia.com/v1',
           workdir
         });
         hideLoading();
