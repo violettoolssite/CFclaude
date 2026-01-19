@@ -1943,27 +1943,40 @@ async function confirmSwitch() {
 
 // ==================== 推荐网关功能 ====================
 
+// 当前网关模式
+let currentGatewayMode = 'builtin';
+
 // 设置推荐网关事件监听
 function setupRecommendedGatewayListeners() {
   // 初始化显示掩码密钥
   const keyDisplay = document.getElementById('recommended-key-display');
   if (keyDisplay) {
-    keyDisplay.textContent = getDisplayKey();
+    keyDisplay.textContent = getDisplayKey() + ' (6个密钥)';
   }
   
-  // 复制掩码密钥
-  const copyBtn = document.getElementById('copy-masked-key');
-  if (copyBtn) {
-    copyBtn.addEventListener('click', () => {
-      const maskedKey = getDisplayKey();
-      navigator.clipboard.writeText(maskedKey).then(() => {
-        copyBtn.textContent = '已复制';
-        setTimeout(() => {
-          copyBtn.textContent = '复制';
-        }, 2000);
-      }).catch(() => {
-        showMessage('复制失败', 'error');
-      });
+  // 网关模式切换
+  const modeBuiltin = document.getElementById('mode-builtin');
+  const modeCustom = document.getElementById('mode-custom');
+  const builtinCard = document.getElementById('mode-builtin-card');
+  const customCard = document.getElementById('mode-custom-card');
+  const builtinConfig = document.getElementById('builtin-config');
+  const customConfig = document.getElementById('custom-config');
+  
+  if (modeBuiltin && modeCustom) {
+    modeBuiltin.addEventListener('change', () => {
+      currentGatewayMode = 'builtin';
+      builtinCard.classList.add('active');
+      customCard.classList.remove('active');
+      builtinConfig.style.display = 'block';
+      customConfig.style.display = 'none';
+    });
+    
+    modeCustom.addEventListener('change', () => {
+      currentGatewayMode = 'custom';
+      customCard.classList.add('active');
+      builtinCard.classList.remove('active');
+      builtinConfig.style.display = 'none';
+      customConfig.style.display = 'block';
     });
   }
   
@@ -1982,7 +1995,7 @@ function setupRecommendedGatewayListeners() {
     });
   }
   
-  // 使用推荐网关启动
+  // 启动按钮
   const applyBtn = document.getElementById('apply-recommended-btn');
   if (applyBtn) {
     applyBtn.addEventListener('click', applyRecommendedGateway);
@@ -1995,26 +2008,51 @@ async function applyRecommendedGateway() {
   const workdir = document.getElementById('recommended-workdir').value.trim();
   const messageEl = document.getElementById('recommended-message');
   
-  showLoading('正在获取可用密钥...');
+  let config;
   
-  // 快速启动模式：直接使用负载均衡选择的密钥
-  const decrypted = decryptGatewayConfig();
-  
-  if (!decrypted) {
-    messageEl.textContent = '配置解密失败';
-    messageEl.className = 'message error';
-    hideLoading();
-    return;
+  if (currentGatewayMode === 'builtin') {
+    // 内置网关模式
+    showLoading('正在获取可用密钥...');
+    
+    const decrypted = decryptGatewayConfig();
+    if (!decrypted) {
+      messageEl.textContent = '配置解密失败';
+      messageEl.className = 'message error';
+      hideLoading();
+      return;
+    }
+    
+    config = {
+      model: model,
+      smallModel: model,
+      baseUrl: decrypted.baseUrl,
+      authToken: decrypted.authToken
+    };
+  } else {
+    // 自建网关模式
+    const customUrl = document.getElementById('custom-gateway-url').value.trim();
+    const customKey = document.getElementById('custom-gateway-key').value.trim();
+    
+    if (!customUrl) {
+      messageEl.textContent = '请输入网关地址';
+      messageEl.className = 'message error';
+      return;
+    }
+    
+    if (!customKey) {
+      messageEl.textContent = '请输入 API Key';
+      messageEl.className = 'message error';
+      return;
+    }
+    
+    config = {
+      model: model,
+      smallModel: model,
+      baseUrl: customUrl.replace(/\/+$/, ''),  // 移除末尾斜杠
+      authToken: customKey
+    };
   }
   
-  const config = {
-    model: model,
-    smallModel: model,
-    baseUrl: decrypted.baseUrl,
-    authToken: decrypted.authToken
-  };
-  
-  const status = keyLoadBalancer.getStatus();
   showLoading('正在应用配置...');
   
   try {
@@ -2024,15 +2062,16 @@ async function applyRecommendedGateway() {
     // 保存到历史配置
     saveToHistory({
       providerId: 'recommended',
-      providerName: '推荐网关',
+      providerName: currentGatewayMode === 'builtin' ? 'Sub2API (内置)' : 'Sub2API (自建)',
       model: model,
-      baseUrl: decrypted.baseUrl,
-      authToken: maskApiKey(decrypted.authToken),  // 历史记录中存储掩码版本
+      baseUrl: config.baseUrl,
+      authToken: currentGatewayMode === 'builtin' ? maskApiKey(config.authToken) : config.authToken,
       gateway: '',
       authMode: null,
       workdir: workdir || '',
       timestamp: Date.now(),
-      isRecommendedGateway: true  // 标记为推荐网关
+      isRecommendedGateway: currentGatewayMode === 'builtin',
+      gatewayMode: currentGatewayMode
     });
     
     // 更新状态显示
@@ -2043,7 +2082,8 @@ async function applyRecommendedGateway() {
     try {
       await ipcRenderer.invoke('launch-claude', { workdir });
       hideLoading();
-      messageEl.textContent = '推荐网关配置成功，Claude Code 已启动（6密钥负载均衡）';
+      const modeDesc = currentGatewayMode === 'builtin' ? '（6密钥负载均衡）' : '（自建网关）';
+      messageEl.textContent = 'Sub2API 配置成功，Claude Code 已启动' + modeDesc;
       messageEl.className = 'message success';
       updateMonitorCliTool('Claude Code');
       

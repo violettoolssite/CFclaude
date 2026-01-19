@@ -133,13 +133,31 @@
       <!-- 推荐网关视图 -->
       <div id="view-recommended-gateway" class="view">
         <header class="main-header">
-          <h2>推荐网关</h2>
-          <p class="subtitle">稳定可靠的第三方 API 网关服务，内置密钥自动配置</p>
+          <h2>Sub2API 网关</h2>
+          <p class="subtitle">支持内置网关或自建 Sub2API 网关</p>
         </header>
-        <div class="info-card recommended-info">
-          <h3>Sub2API 推荐网关</h3>
-          <p>这是一个稳定可靠的第三方 API 网关，已内置配置好的 API 密钥。</p>
-          <p>选择此网关将自动配置 Claude Code 的后端地址和认证信息。</p>
+        
+        <!-- 网关选择 -->
+        <div class="info-card">
+          <h3>选择网关模式</h3>
+          <div class="gateway-mode-select">
+            <label class="radio-card active" id="mode-builtin-card">
+              <input type="radio" name="gateway-mode" value="builtin" id="mode-builtin" checked>
+              <span class="radio-label">内置网关</span>
+              <span class="radio-desc">使用预配置的 6 密钥负载均衡，无需任何配置</span>
+            </label>
+            <label class="radio-card" id="mode-custom-card">
+              <input type="radio" name="gateway-mode" value="custom" id="mode-custom">
+              <span class="radio-label">自建网关</span>
+              <span class="radio-desc">使用自己搭建的 Sub2API 网关</span>
+            </label>
+          </div>
+        </div>
+        
+        <!-- 内置网关配置（默认显示） -->
+        <div id="builtin-config" class="info-card recommended-info" style="margin-top: 16px;">
+          <h3>内置 Sub2API 网关</h3>
+          <p>已内置配置好的 API 密钥，选择后自动配置 Claude Code。</p>
           <div class="gateway-config-display">
             <div class="config-item">
               <span class="config-label">网关地址</span>
@@ -148,14 +166,31 @@
             <div class="config-item">
               <span class="config-label">API Key</span>
               <span class="config-value masked" id="recommended-key-display">******************************** (6个密钥)</span>
-              <button class="btn-copy-masked" id="copy-masked-key" title="复制（仅星号）">复制</button>
             </div>
           </div>
-          <p class="security-note">内置6个密钥负载均衡，自动切换可用密钥，故障自动转移。采用双重加密存储。</p>
+          <p class="security-note">6个密钥负载均衡，自动切换可用密钥，故障自动转移。</p>
         </div>
+        
+        <!-- 自建网关配置（默认隐藏） -->
+        <div id="custom-config" class="info-card" style="margin-top: 16px; display: none;">
+          <h3>自建 Sub2API 网关</h3>
+          <p>输入你自己搭建的 Sub2API 网关地址和 API Key。</p>
+          <p style="margin-top: 8px; color: #888; font-size: 12px;">Sub2API 项目地址：<a href="https://github.com/AIPro-ltd/sub2api" target="_blank" style="color: #c8ff00;">github.com/AIPro-ltd/sub2api</a></p>
+          <div class="form-group" style="margin-top: 16px;">
+            <label>网关地址</label>
+            <input type="text" id="custom-gateway-url" class="input-field" placeholder="https://your-sub2api.com/v1">
+          </div>
+          <div class="form-group" style="margin-top: 12px;">
+            <label>API Key</label>
+            <input type="password" id="custom-gateway-key" class="input-field" placeholder="输入你的 Sub2API API Key">
+          </div>
+        </div>
+        
+        <!-- 模型和工作目录 -->
         <div class="info-card" style="margin-top: 16px;">
-          <h3>选择模型</h3>
+          <h3>启动配置</h3>
           <div class="form-group">
+            <label>选择模型</label>
             <select id="recommended-model-select" class="input-field">
               <option value="claude-sonnet-4-5-20250514">Claude Sonnet 4.5 (推荐)</option>
               <option value="claude-opus-4-5-20250514">Claude Opus 4.5</option>
@@ -170,7 +205,7 @@
             </div>
           </div>
         </div>
-        <button id="apply-recommended-btn" class="btn-primary btn-large" style="margin-top: 20px;">使用推荐网关启动</button>
+        <button id="apply-recommended-btn" class="btn-primary btn-large" style="margin-top: 20px;">启动 Claude Code</button>
         <div id="recommended-message" class="message"></div>
       </div>
 
@@ -586,3 +621,4 @@
   <script src="renderer.js"></script>
 </body>
 </html>
+

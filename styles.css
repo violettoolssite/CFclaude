@@ -1550,3 +1550,56 @@ select.input-field option {
   font-size: 11px;
   line-height: 1.5;
 }
+
+/* 网关模式选择 */
+.gateway-mode-select {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.radio-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  background: #0a0a0a;
+  border: 2px solid #252525;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.radio-card:hover {
+  border-color: #444;
+}
+
+.radio-card.active {
+  border-color: #c8ff00;
+  background: rgba(200, 255, 0, 0.05);
+}
+
+.radio-card input[type="radio"] {
+  display: none;
+}
+
+.radio-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e0e0e0;
+  margin-bottom: 6px;
+}
+
+.radio-card.active .radio-label {
+  color: #c8ff00;
+}
+
+.radio-desc {
+  font-size: 11px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.radio-card.active .radio-desc {
+  color: #888;
+}
