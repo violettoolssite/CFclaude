@@ -224,7 +224,7 @@ const PROVIDERS = {
   }
 };
 
-// 统一网关地址（用户可自定义）
+// 自定义网关地址
 let unifiedGateway = '';
 
 let currentProvider = null;
@@ -841,7 +841,7 @@ async function loadCurrentConfig() {
       providerName = 'Cloudflare';
       providerId = 'cloudflare';
     } else {
-      // 使用了统一网关，根据模型名判断服务商
+      // 使用了自定义网关，根据模型名判断服务商
       isCustomGateway = true;
       gatewayUrl = config.baseUrl;
       if (config.model && config.model.includes('claude')) {
@@ -881,7 +881,7 @@ async function loadCurrentConfig() {
     if (providerId === 'cloudflare' && config.baseUrl) {
       document.getElementById('cf-worker-url').value = config.baseUrl;
     }
-    // 填入统一网关地址
+    // 填入自定义网关地址
     const gatewayInput = document.getElementById('unified-gateway');
     if (gatewayInput) {
       gatewayInput.value = isCustomGateway ? gatewayUrl : '';
@@ -1406,7 +1406,7 @@ async function applyConfig() {
       showMessage('请输入 Anthropic API Key', 'error');
       return;
     }
-    // 如果设置了统一网关，使用网关地址；否则使用官方默认地址
+    // 如果设置了自定义网关，使用网关地址；否则使用官方默认地址
     config.baseUrl = gateway || '';
     config.authToken = apiKey;
   } else if (currentProvider === 'qwen' && currentAuthMode === 'oauth') {
@@ -1427,7 +1427,7 @@ async function applyConfig() {
       showMessage('请输入 API Key', 'error');
       return;
     }
-    // 如果设置了统一网关，使用网关地址；否则使用服务商默认地址
+    // 如果设置了自定义网关，使用网关地址；否则使用服务商默认地址
     config.baseUrl = gateway || provider.baseUrl;
     config.authToken = apiKey;
   }
@@ -1453,7 +1453,7 @@ async function applyConfig() {
       model: model,
       baseUrl: config.baseUrl,
       authToken: historyAuthToken,
-      gateway: gateway || '',  // 保存统一网关配置
+      gateway: gateway || '',  // 保存自定义网关配置
       authMode: savedProvider === 'qwen' ? savedAuthMode : null,  // 保存认证方式
       workdir: workdir || '',  // 保存工作目录
       timestamp: Date.now(),
@@ -1725,7 +1725,7 @@ function showConfirmModal(config) {
   if (config.gateway) {
     gatewayRow = `
     <div class="detail-row">
-      <span class="detail-label">统一网关</span>
+      <span class="detail-label">自定义网关</span>
       <span class="detail-value" style="font-size: 10px; word-break: break-all;">${config.gateway}</span>
     </div>`;
   }
@@ -1745,7 +1745,7 @@ function showConfirmModal(config) {
     authInfo = '推荐网关 (内置密钥)';
   } else {
     cliTool = 'Claude Code';
-    authInfo = config.gateway ? '统一网关' : 'Anthropic API';
+    authInfo = config.gateway ? '自定义网关' : 'Anthropic API';
   }
   
   let cliToolRow = `
@@ -1819,7 +1819,7 @@ async function confirmSwitch() {
     
     await ipcRenderer.invoke('apply-config', applyConfig);
     
-    // 更新界面上的统一网关输入框
+    // 更新界面上的自定义网关输入框
     const gatewayInput = document.getElementById('unified-gateway');
     if (gatewayInput) {
       gatewayInput.value = config.gateway || '';

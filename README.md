@@ -17,7 +17,7 @@ CFclaude 是一款跨平台桌面工具，用于快速切换 Claude Code 和 Qwe
 - **实时文件监控**：查看 AI 的文件操作（新建、编辑、删除、读取）
 - **操作快照保存**：自动保存每次操作时的文件内容
 - **快照回溯功能**：将文件恢复到任意历史快照状态
-- 统一网关功能，兼容 OpenRouter、OneAPI、NewAPI
+- 自定义网关功能，兼容 OpenRouter、OneAPI、NewAPI
 - Cloudflare Worker 一键部署（自动配置 AI Binding 和路由）
 - 历史配置记录，快速切换
 - 一键安装 Claude Code / Qwen Code 和 Node.js
@@ -115,9 +115,9 @@ Sub2API 项目地址：https://github.com/AIPro-ltd/sub2api
 - 启动命令：`qwen`
 
 
-### 统一网关
+### 自定义网关
 
-支持自定义 API 网关地址，兼容 OpenRouter、OneAPI、NewAPI 等。填写统一网关地址后，所有服务商（Cloudflare 和 Anthropic 除外）的请求将通过该网关转发。
+支持自定义 API 网关地址，兼容 OpenRouter、OneAPI、NewAPI 等。填写自定义网关地址后，所有服务商（Cloudflare 和 Anthropic 除外）的请求将通过该网关转发。
 
 ### 历史配置
 
