@@ -1793,8 +1793,12 @@ function loadHistoryList() {
     // 确定 CLI 工具和认证方式
     let cliTool = 'Claude';
     let authInfo = '';
-    
-    if (item.providerId === 'qwen') {
+
+    // 如果有 cliType 字段，直接使用（新版本）
+    if (item.cliType) {
+      cliTool = item.cliType;
+      authInfo = item.authInfo || '';
+    } else if (item.providerId === 'qwen') {
       cliTool = 'Qwen';
       authInfo = item.authMode === 'oauth' ? 'OAuth' : 'API';
     } else if (item.providerId === 'modelscope') {
@@ -1903,8 +1907,12 @@ function showConfirmModal(config) {
   // 确定 CLI 工具和认证方式
   let cliTool = 'Claude Code';
   let authInfo = 'API Key';
-  
-  if (config.providerId === 'qwen') {
+
+  // 如果有 cliType 字段，直接使用（新版本）
+  if (config.cliType) {
+    cliTool = config.cliType;
+    authInfo = config.authInfo || '';
+  } else if (config.providerId === 'qwen') {
     cliTool = 'Qwen Code';
     authInfo = config.authMode === 'oauth' ? 'OAuth (免费额度)' : 'OpenAI 兼容 (API Key)';
   } else if (config.providerId === 'modelscope') {
@@ -2042,8 +2050,28 @@ async function confirmSwitch() {
     
     // 根据服务商类型选择启动对应的 CLI 工具
     const workdir = config.workdir || '';
-    
-    if (config.providerId === 'qwen') {
+
+    // 检查是否为 CFclaude CLI 配置
+    if (config.cliType === 'CFclaude') {
+      // 使用 CFclaude CLI 启动
+      showLoading('正在启动 CFclaude CLI...');
+      try {
+        await ipcRenderer.invoke('launch-cfclaude-cli', {
+          provider: config.providerId,
+          model: config.model,
+          apiKey: config.authToken,
+          baseUrl: config.baseUrl,
+          workdir
+        });
+        hideLoading();
+        showMessage('已切换到: ' + config.providerName + '，CFclaude CLI 已启动', 'success');
+        updateMonitorCliTool('CFclaude CLI');
+        if (workdir) autoStartMonitoring(workdir);
+      } catch (launchError) {
+        hideLoading();
+        showMessage('已切换到: ' + config.providerName + ' (启动失败)', 'success');
+      }
+    } else if (config.providerId === 'qwen') {
       if (config.authMode === 'openai') {
         // 通义千问 OpenAI 兼容模式
         showLoading('正在启动 Qwen Code...');
@@ -2302,4 +2330,298 @@ async function applyRecommendedGateway() {
     messageEl.className = 'message error';
   }
 }
+
+// ==================== CFclaude CLI 集成 ====================
+
+// CLI 服务商配置：直接复用主项目 PROVIDERS，保持一致，只补充占位符
+const CLI_PROVIDER_IDS = ['deepseek', 'kimi', 'doubao', 'qwen', 'zhipu', 'nvidia', 'modelscope', 'anthropic'];
+const CLI_PROVIDERS = {};
+
+CLI_PROVIDER_IDS.forEach((id) => {
+  const p = PROVIDERS[id];
+  if (!p) return;
+
+  let placeholder = 'API Key';
+  if (id === 'nvidia') placeholder = 'nvapi-...';
+  if (id === 'deepseek' || id === 'kimi' || id === 'qwen') placeholder = 'sk-...';
+
+  CLI_PROVIDERS[id] = {
+    name: p.name,
+    baseUrl: p.baseUrl,
+    placeholder
+  };
+});
+
+// CLI 密钥与自定义模型存储键名
+const CLI_KEYS_STORAGE_KEY = 'cfclaude-cli-keys';
+const CLI_CUSTOM_MODELS_KEY = 'cfclaude-cli-custom-models';
+
+// 加载保存的 CLI 密钥
+function loadCliKeys() {
+  try {
+    const saved = localStorage.getItem(CLI_KEYS_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+// 保存 CLI 密钥
+function saveCliKeys(keys) {
+  localStorage.setItem(CLI_KEYS_STORAGE_KEY, JSON.stringify(keys));
+}
+
+// 加载自定义模型（按服务商划分）
+function loadCliCustomModels() {
+  try {
+    const saved = localStorage.getItem(CLI_CUSTOM_MODELS_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+// 保存自定义模型
+function saveCliCustomModels(models) {
+  localStorage.setItem(CLI_CUSTOM_MODELS_KEY, JSON.stringify(models));
+}
+
+// 获取当前选中的服务商
+function getSelectedCliProvider() {
+  const modelSelect = document.getElementById('cli-model-select');
+  if (!modelSelect || !modelSelect.value) return null;
+  const [provider] = modelSelect.value.split(':');
+  return provider;
+}
+
+// 构建 CLI 模型下拉选项（主项目模型 + 自定义模型）
+function buildCliModelOptions() {
+  const select = document.getElementById('cli-model-select');
+  if (!select) return;
+
+  const customModels = loadCliCustomModels();
+  const previousValue = select.value;
+  select.innerHTML = '';
+
+  CLI_PROVIDER_IDS.forEach((providerId) => {
+    const providerConfig = PROVIDERS[providerId];
+    if (!providerConfig) return;
+
+    // 获取该服务商的基础模型列表
+    let models = [];
+    if (providerId === 'qwen' && providerConfig.modelsByAuth && providerConfig.modelsByAuth.openai) {
+      models = providerConfig.modelsByAuth.openai;
+    } else if (providerConfig.models) {
+      models = providerConfig.models;
+    }
+
+    // 追加自定义模型
+    const custom = customModels[providerId] || [];
+    const allModels = [...models, ...custom];
+    if (allModels.length === 0) return;
+
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = providerConfig.name;
+
+    allModels.forEach((m) => {
+      const option = document.createElement('option');
+      option.value = `${providerId}:${m.id}`;
+      option.textContent = m.name || m.id;
+      optgroup.appendChild(option);
+    });
+
+    select.appendChild(optgroup);
+  });
+
+  // 恢复选中值（如果还存在）
+  if (previousValue && Array.from(select.options).some(o => o.value === previousValue)) {
+    select.value = previousValue;
+  } else if (select.options.length > 0) {
+    select.selectedIndex = 0;
+  }
+}
+
+// 更新 API Key 输入框标签和值
+function updateCliApiKeyInput() {
+  const provider = getSelectedCliProvider();
+  if (!provider) return;
+  
+  const providerConfig = CLI_PROVIDERS[provider];
+  const labelEl = document.getElementById('cli-provider-label');
+  const inputEl = document.getElementById('cli-api-key');
+  
+  if (labelEl && providerConfig) {
+    labelEl.textContent = `${providerConfig.name} API Key`;
+  }
+  
+  if (inputEl && providerConfig) {
+    inputEl.placeholder = providerConfig.placeholder;
+    
+    // 加载该服务商保存的密钥
+    const savedKeys = loadCliKeys();
+    inputEl.value = savedKeys[provider] || '';
+  }
+}
+
+// 初始化 CLI 视图
+function initCliView() {
+  const modelSelect = document.getElementById('cli-model-select');
+  const apiKeyInput = document.getElementById('cli-api-key');
+
+  // 使用主项目 PROVIDERS 动态构建模型列表
+  buildCliModelOptions();
+
+  // 模型选择变化时，切换 API Key 标签和加载对应密钥
+  modelSelect?.addEventListener('change', updateCliApiKeyInput);
+  
+  // 初始化时更新一次
+  updateCliApiKeyInput();
+  
+  // 选择目录按钮
+  document.getElementById('cli-workdir-btn')?.addEventListener('click', async () => {
+    const result = await ipcRenderer.invoke('select-directory');
+    if (result) {
+      document.getElementById('cli-workdir').value = result;
+    }
+  });
+  
+  // 启动 CLI 按钮
+  document.getElementById('cli-launch-btn')?.addEventListener('click', launchCfclaudeCli);
+
+  // 添加自定义模型按钮
+  document.getElementById('cli-add-model-btn')?.addEventListener('click', addCliCustomModel);
+}
+
+// 为当前服务商添加自定义模型
+function addCliCustomModel() {
+  const messageEl = document.getElementById('cli-message');
+  const modelInput = document.getElementById('cli-custom-model-id');
+  const nameInput = document.getElementById('cli-custom-model-name');
+  const provider = getSelectedCliProvider();
+
+  if (!provider) {
+    messageEl.textContent = '请先选择服务商和任意模型';
+    messageEl.className = 'message error';
+    return;
+  }
+
+  const modelId = modelInput.value.trim();
+  if (!modelId) {
+    messageEl.textContent = '请输入自定义模型 ID';
+    messageEl.className = 'message error';
+    return;
+  }
+
+  const displayName = (nameInput.value.trim() || modelId);
+
+  const customModels = loadCliCustomModels();
+  const list = customModels[provider] || [];
+  if (!list.some(m => m.id === modelId)) {
+    list.push({ id: modelId, name: displayName });
+  }
+  customModels[provider] = list;
+  saveCliCustomModels(customModels);
+
+  // 重新构建下拉列表并选中新模型
+  buildCliModelOptions();
+  const select = document.getElementById('cli-model-select');
+  const newValue = `${provider}:${modelId}`;
+  if (select && Array.from(select.options).some(o => o.value === newValue)) {
+    select.value = newValue;
+  }
+
+  // 清空输入框并提示
+  modelInput.value = '';
+  nameInput.value = '';
+  updateCliApiKeyInput();
+
+  messageEl.textContent = '自定义模型已添加到当前服务商';
+  messageEl.className = 'message success';
+}
+
+// 启动 CFclaude CLI
+async function launchCfclaudeCli() {
+  const messageEl = document.getElementById('cli-message');
+  const modelSelect = document.getElementById('cli-model-select');
+  const apiKeyInput = document.getElementById('cli-api-key');
+  const workdir = document.getElementById('cli-workdir').value.trim();
+  
+  const selectedValue = modelSelect.value;
+  if (!selectedValue) {
+    messageEl.textContent = '请选择模型';
+    messageEl.className = 'message error';
+    return;
+  }
+  
+  // 解析 provider:model 格式
+  const [provider, model] = selectedValue.split(':');
+  
+  // 获取输入的 API Key
+  const apiKey = apiKeyInput.value.trim();
+  
+  if (!apiKey) {
+    messageEl.textContent = `请输入 ${CLI_PROVIDERS[provider]?.name || provider} 的 API Key`;
+    messageEl.className = 'message error';
+    return;
+  }
+  
+  // 自动获取 baseUrl（用户无需填写）
+  const baseUrl = CLI_PROVIDERS[provider]?.baseUrl;
+  if (!baseUrl) {
+    messageEl.textContent = '未知的服务商';
+    messageEl.className = 'message error';
+    return;
+  }
+  
+  // 启动时自动保存 API Key
+  const savedKeys = loadCliKeys();
+  savedKeys[provider] = apiKey;
+  saveCliKeys(savedKeys);
+  
+  showLoading('正在启动 CFclaude CLI...');
+  
+  try {
+    await ipcRenderer.invoke('launch-cfclaude-cli', {
+      provider,
+      model,
+      apiKey,
+      baseUrl,
+      workdir
+    });
+
+    // 启动成功后，保存到历史配置
+    saveToHistory({
+      providerId: provider,
+      providerName: CLI_PROVIDERS[provider]?.name || provider,
+      model: model,
+      baseUrl: baseUrl,
+      authToken: apiKey,
+      gateway: '',
+      authMode: null,
+      workdir: workdir || '',
+      timestamp: Date.now(),
+      cliType: 'CFclaude',  // 标记为 CFclaude CLI
+      authInfo: CLI_PROVIDERS[provider]?.name || provider  // 服务商名称
+    });
+
+    hideLoading();
+    messageEl.textContent = `CFclaude CLI 已启动 - ${CLI_PROVIDERS[provider]?.name} / ${model}`;
+    messageEl.className = 'message success';
+
+    // 更新监控
+    updateMonitorCliTool('CFclaude CLI');
+    if (workdir) {
+      autoStartMonitoring(workdir);
+    }
+  } catch (error) {
+    hideLoading();
+    messageEl.textContent = '启动失败: ' + error.message;
+    messageEl.className = 'message error';
+  }
+}
+
+// 初始化 CLI 视图
+document.addEventListener('DOMContentLoaded', () => {
+  initCliView();
+});
 

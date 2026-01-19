@@ -8,19 +8,30 @@ CFclaude 是一款跨平台桌面工具，用于快速切换 Claude Code 和 Qwe
 
 ## 功能特性
 
-- 一键切换 Claude Code / Qwen Code 后端服务商
-- 支持 8 大 AI 服务商
+### 三种 CLI 工具支持
+- **Claude Code**：适用于大多数服务商（DeepSeek、Kimi、豆包、智谱AI、Anthropic等）
+- **Qwen Code**：专为通义千问优化，支持 OAuth 免费额度
+- **CFclaude CLI**：内置多服务商 CLI 工具，无需单独安装
+
+### 核心功能
+- 一键切换 Claude Code / Qwen Code / CFclaude CLI 后端服务商
+- 支持 8+ AI 服务商
 - **Sub2API 网关**：内置 6 密钥负载均衡，无需配置即可使用
 - **自建网关支持**：支持用户自己搭建的 Sub2API 网关
-- **配置后自动启动 Claude Code 或 Qwen Code**
-- **集成 Qwen Code 安装和配置**（阿里云百炼专属工具）
+- **配置后自动启动对应的 CLI 工具**
+- **历史配置记录**：记录 CLI 类型，快速切换并自动启动对应工具
+
+### 文件监控与版本控制
 - **实时文件监控**：查看 AI 的文件操作（新建、编辑、删除、读取）
-- **操作快照保存**：自动保存每次操作时的文件内容
+- **操作快照保存**：自动保存每次操作时的文件内容（限制 500KB）
 - **快照回溯功能**：将文件恢复到任意历史快照状态
+- **操作日志回退**：回溯时同步移除后续操作记录
+
+### 其他功能
 - 自定义网关功能，兼容 OpenRouter、OneAPI、NewAPI
 - Cloudflare Worker 一键部署（自动配置 AI Binding 和路由）
-- 历史配置记录，快速切换
 - 一键安装 Claude Code / Qwen Code 和 Node.js
+- 集成 Qwen Code 安装和配置（阿里云百炼专属工具）
 - 操作状态实时反馈
 
 ## 支持的服务商
@@ -28,15 +39,19 @@ CFclaude 是一款跨平台桌面工具，用于快速切换 Claude Code 和 Qwe
 | 服务商 | API 地址 | 推荐模型 | 启动工具 | 特点 |
 |--------|----------|----------|----------|------|
 | **Sub2API** | 内置/自建 | claude-sonnet-4.5 | Claude Code | **无需 API Key，6 密钥负载均衡** |
-| DeepSeek | api.deepseek.com | deepseek-chat | Claude Code | 编程能力强，性价比高 |
-| 豆包 | ark.cn-beijing.volces.com | doubao-seed-code | Claude Code | 视觉理解，原生兼容 |
-| Kimi | api.moonshot.cn | kimi-k2 | Claude Code | 超长上下文 128K |
-| 通义千问 | dashscope.aliyuncs.com | qwen3-coder-plus | **Qwen Code (OAuth)** | 每天 2000 次免费 |
-| 智谱AI | open.bigmodel.cn | glm-4.7 | Claude Code | 稳定可靠，中文优化 |
-| ModelScope | api-inference.modelscope.cn | Qwen2.5-Coder-32B | **Qwen Code** | 魔搭社区，OpenAI 兼容 |
-| NVIDIA NIM | integrate.api.nvidia.com | GLM 4.7、MiniMax M2.1 | **Qwen Code** | 企业级推理，多模型 |
+| DeepSeek | api.deepseek.com | deepseek-chat | Claude Code / **CFclaude CLI** | 编程能力强，性价比高 |
+| 豆包 | ark.cn-beijing.volces.com | doubao-seed-code | Claude Code / **CFclaude CLI** | 视觉理解，原生兼容 |
+| Kimi | api.moonshot.cn | kimi-k2 | Claude Code / **CFclaude CLI** | 超长上下文 128K |
+| 通义千问 | dashscope.aliyuncs.com | qwen3-coder-plus | **Qwen Code (OAuth)** / CFclaude CLI | 每天 2000 次免费 |
+| 智谱AI | open.bigmodel.cn | glm-4.7 | Claude Code / **CFclaude CLI** | 稳定可靠，中文优化 |
+| ModelScope | api-inference.modelscope.cn | Qwen2.5-Coder-32B | **Qwen Code** / CFclaude CLI | 魔搭社区，OpenAI 兼容 |
+| NVIDIA NIM | integrate.api.nvidia.com | GLM 4.7、MiniMax M2.1 | **Qwen Code** / CFclaude CLI | 企业级推理，多模型 |
 | Cloudflare | 自建 Worker | llama-3.1-8b | Claude Code | 完全免费 |
-| Anthropic | 官方 | claude-sonnet-4 | Claude Code | 官方 API |
+| Anthropic | 官方 | claude-sonnet-4 | Claude Code / **CFclaude CLI** | 官方 API |
+
+**说明：**
+- **粗体** 表示推荐使用的工具
+- CFclaude CLI 支持所有服务商（除 Cloudflare 外），无需单独安装
 
 ## 下载安装
 
@@ -115,6 +130,24 @@ Sub2API 项目地址：https://github.com/AIPro-ltd/sub2api
 - 100 万 Token 免费额度（北京地域）
 - 启动命令：`qwen`
 
+### CFclaude CLI（内置工具）
+
+**新增功能：** 无需单独安装 Claude Code 或 Qwen Code，直接使用内置的 CFclaude CLI！
+
+**使用方法：**
+1. 点击侧边栏「CFclaude CLI」
+2. 选择服务商和模型
+3. 输入 API Key（自动保存）
+4. 选择工作目录（可选）
+5. 点击「启动 CFclaude CLI」
+
+**特点：**
+- 支持 8 大服务商（DeepSeek、Kimi、豆包、通义千问、智谱AI、NVIDIA、ModelScope、Anthropic）
+- 自动保存到历史配置，一键切换
+- 完全集成到主程序，无需外部依赖
+- 支持自定义模型添加
+- 启动命令：`cfclaude`
+
 
 ### 自定义网关
 
@@ -122,7 +155,17 @@ Sub2API 项目地址：https://github.com/AIPro-ltd/sub2api
 
 ### 历史配置
 
-右侧历史配置栏记录最近 10 条配置，点击即可快速切换并自动启动对应的 CLI 工具。
+右侧历史配置栏记录最近 10 条配置，包含：
+- 服务商和模型信息
+- **CLI 工具类型**（Claude Code / Qwen Code / CFclaude CLI）
+- 认证方式（API / OAuth / 网关）
+- 工作目录
+- 配置时间
+
+点击任意历史配置即可：
+1. 自动切换到对应的服务商配置
+2. **自动启动对应的 CLI 工具**（Claude Code、Qwen Code 或 CFclaude CLI）
+3. 自动应用工作目录
 
 ### 文件监控与快照
 
@@ -245,11 +288,24 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
 
 ```
 CFclaude/
-├── main.js              # Electron 主进程
-├── renderer.js          # 渲染进程
+├── main.js              # Electron 主进程（IPC、CLI 启动、文件监控）
+├── renderer.js          # 渲染进程（UI、配置管理、历史系统）
 ├── index.html           # 界面
 ├── styles.css           # 样式
 ├── package.json         # 项目配置
+├── cfclaude-cli/        # 内置 CLI 工具（TypeScript）
+│   ├── src/
+│   │   ├── chat.ts          # 主聊天循环
+│   │   ├── config.ts        # 配置管理
+│   │   ├── index.ts         # 入口文件
+│   │   ├── tools/           # 工具执行（read/write/edit/delete等）
+│   │   ├── llm/             # LLM 客户端
+│   │   ├── providers/       # 服务商配置
+│   │   └── ui/              # TUI 界面
+│   ├── dist/                # 编译输出（打包时包含）
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── CHANGELOG.md
 ├── cloudflare-worker/
 │   ├── worker.js
 │   ├── wrangler.toml
@@ -258,21 +314,63 @@ CFclaude/
 │   ├── index.html
 │   ├── style.css
 │   └── ...
-└── README.md
+├── README.md
+└── CLAUDE.md           # Claude Code 开发指南
 ```
 
 ## 开发
 
+### 主应用开发
+
 ```bash
+# 安装依赖（自动安装 cfclaude-cli 依赖）
+npm install
+
+# 运行开发模式
+npm start
+
+# 构建（自动编译 CLI 工具）
+npm run build           # 当前平台
+npm run build:win       # Windows (portable + NSIS)
+npm run build:linux     # Linux (AppImage + deb)
+npm run build:mac       # macOS (dmg)
+```
+
+### CFclaude CLI 开发
+
+```bash
+# 进入 CLI 目录
+cd cfclaude-cli
+
 # 安装依赖
 npm install
 
-# 运行开发
+# 开发模式（ts-node）
+npm run dev
+
+# 编译 TypeScript
+npm run build
+
+# 运行编译后的 CLI
 npm start
 
-# 构建
-npm run build
+# 或直接运行
+node dist/index.js
 ```
+
+### 构建流程说明
+
+1. **主应用构建时**会自动执行 `prebuild` 脚本
+2. `prebuild` 脚本会自动编译 cfclaude-cli
+3. 编译后的 `cfclaude-cli/dist/` 会被打包到 Electron 应用中
+4. 打包后的应用可在 `release/` 目录找到
+
+### 开发注意事项
+
+- 修改 CLI 代码后需要重新编译：`cd cfclaude-cli && npm run build`
+- 主应用会从 `cfclaude-cli/dist/index.js` 启动 CLI
+- 开发模式下 CLI 路径：`__dirname/cfclaude-cli/dist/`
+- 打包模式下 CLI 路径：`process.resourcesPath/cfclaude-cli/dist/`
 
 ## 相关资源
 

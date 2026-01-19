@@ -527,6 +527,61 @@ ipcMain.handle('install-qwen-code', async () => {
   });
 });
 
+// 启动 CFclaude CLI（内置 CLI，无需单独安装）
+ipcMain.handle('launch-cfclaude-cli', async (event, config) => {
+  const { spawn } = require('child_process');
+  const fs = require('fs');
+  const workdir = config.workdir || process.cwd();
+  
+  // 获取内置 CLI 路径
+  let cliPath;
+  if (app.isPackaged) {
+    // 打包后：从 resources 目录加载
+    cliPath = path.join(process.resourcesPath, 'cfclaude-cli', 'dist', 'index.js');
+  } else {
+    // 开发模式：从项目目录加载
+    cliPath = path.join(__dirname, 'cfclaude-cli', 'dist', 'index.js');
+  }
+  
+  return new Promise((resolve, reject) => {
+    // 检查 CLI 文件是否存在
+    if (!fs.existsSync(cliPath)) {
+      reject(new Error('CLI 文件不存在，请先编译 cfclaude-cli'));
+      return;
+    }
+    
+    // 转义路径中的反斜杠
+    const escapedCliPath = cliPath.replace(/\\/g, '\\\\');
+    const escapedWorkdir = workdir.replace(/\\/g, '\\\\');
+    
+    // 构建 PowerShell 启动命令
+    const psCommand = `
+      Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force;
+      cd '${escapedWorkdir}';
+      $env:CFCLAUDE_PROVIDER = '${config.provider}';
+      $env:CFCLAUDE_MODEL = '${config.model}';
+      $env:CFCLAUDE_API_KEY = '${config.apiKey}';
+      $env:CFCLAUDE_BASE_URL = '${config.baseUrl}';
+      node '${escapedCliPath}'
+    `.replace(/\n\s*/g, ' ');
+    
+    // 使用 cmd 的 start 命令在新窗口中启动 PowerShell
+    const child = spawn('cmd', ['/c', 'start', 'powershell', '-NoExit', '-Command', psCommand], {
+      detached: true,
+      stdio: 'ignore',
+      cwd: workdir,
+      shell: true
+    });
+    
+    child.unref();
+    
+    // 延迟返回，确保进程已启动
+    setTimeout(() => {
+      resolve({ success: true });
+    }, 500);
+  });
+});
+
 // 配置 Qwen Code 环境变量
 ipcMain.handle('config-qwen-code', async (event, config) => {
   const commands = [];

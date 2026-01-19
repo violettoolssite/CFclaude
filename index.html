@@ -23,6 +23,7 @@
         </div>
         <div class="nav-section">
           <div class="nav-title">工具</div>
+          <button class="sidebar-btn cfclaude-cli-btn" data-view="cfclaude-cli">CFclaude CLI</button>
           <button class="sidebar-btn" data-view="install-claude">安装 Claude Code</button>
           <button class="sidebar-btn" data-view="install-qwen">安装 Qwen Code</button>
           <button class="sidebar-btn" data-view="install-node">下载 Node.js</button>
@@ -197,6 +198,45 @@
         
         <button id="apply-recommended-btn" class="btn-primary" style="margin-top: 12px;">启动 Claude Code</button>
         <div id="recommended-message" class="message"></div>
+      </div>
+
+      <!-- CFclaude CLI 视图 -->
+      <div id="view-cfclaude-cli" class="view">
+        <header class="main-header">
+          <h2>CFclaude CLI</h2>
+          <p class="subtitle">多服务商终端 AI 编程助手</p>
+        </header>
+        
+        <div class="info-card">
+          <h3>选择模型</h3>
+          <div class="form-group">
+            <label>模型</label>
+            <select id="cli-model-select" class="input-field">
+            </select>
+          </div>
+          <div class="form-group">
+            <label>自定义模型（当前服务商）</label>
+            <div class="workdir-row">
+              <input type="text" id="cli-custom-model-id" class="input-field" placeholder="输入模型 ID，例如 glm-4-air">
+              <button id="cli-add-model-btn" class="btn-secondary">添加</button>
+            </div>
+            <input type="text" id="cli-custom-model-name" class="input-field" placeholder="可选：显示名称，不填则使用模型 ID">
+          </div>
+          <div class="form-group">
+            <label id="cli-provider-label">API Key</label>
+            <input type="password" id="cli-api-key" class="input-field" placeholder="输入 API Key">
+          </div>
+          <div class="form-group">
+            <label>启动目录</label>
+            <div class="workdir-row">
+              <input type="text" id="cli-workdir" class="input-field" placeholder="选择工作目录">
+              <button id="cli-workdir-btn" class="btn-icon-text">选择</button>
+            </div>
+          </div>
+          <button id="cli-launch-btn" class="btn-primary btn-large">启动 CFclaude CLI</button>
+        </div>
+        
+        <div id="cli-message" class="message"></div>
       </div>
 
       <!-- 安装 Claude Code 视图 -->

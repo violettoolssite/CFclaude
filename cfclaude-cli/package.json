@@ -1,0 +1,52 @@
+{
+  "name": "@anthropic-ai/cfclaude-code",
+  "version": "1.0.0",
+  "description": "CFclaude Code - Multi-provider AI coding assistant CLI, inspired by Claude Code and Qwen Code",
+  "main": "dist/index.js",
+  "bin": {
+    "cfclaude": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "ai",
+    "cli",
+    "coding-assistant",
+    "claude",
+    "qwen",
+    "deepseek",
+    "multi-provider"
+  ],
+  "author": "CFclaude Team",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/violettoolssite/cfclaude-cli"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "inquirer": "^8.2.6",
+    "ora": "^5.4.1",
+    "marked": "^11.1.1",
+    "marked-terminal": "^6.2.0",
+    "highlight.js": "^11.9.0",
+    "chokidar": "^3.5.3",
+    "glob": "^10.3.10",
+    "ignore": "^5.3.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@types/inquirer": "^9.0.7",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1809,3 +1809,80 @@ select.input-field option {
 .radio-card.active .radio-desc {
   color: #888;
 }
+
+/* ==================== CFclaude CLI 样式 ==================== */
+
+/* CLI 侧边栏按钮 */
+.cfclaude-cli-btn {
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.15), rgba(255, 200, 0, 0.1));
+  border-left: 3px solid #ff8c00 !important;
+}
+
+.cfclaude-cli-btn:hover {
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.25), rgba(255, 200, 0, 0.15)) !important;
+}
+
+.cfclaude-cli-btn.active {
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.3), rgba(255, 200, 0, 0.2)) !important;
+  border-left-color: #ffa500 !important;
+}
+
+/* CLI 视图表单样式 */
+#view-cfclaude-cli .form-group {
+  margin-bottom: 16px;
+}
+
+#view-cfclaude-cli .form-group label {
+  display: block;
+  font-size: 12px;
+  color: #888;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+#view-cfclaude-cli #cli-provider-label {
+  color: #ff8c00;
+}
+
+/* CLI 视图卡片标题 */
+#view-cfclaude-cli .info-card h3 {
+  color: #ff8c00;
+  border-bottom-color: rgba(255, 140, 0, 0.3);
+}
+
+#view-cfclaude-cli .info-card p.hint {
+  color: #999;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+/* CLI 按钮样式 */
+#view-cfclaude-cli .btn-primary {
+  background: linear-gradient(135deg, #ff8c00, #ffa500);
+}
+
+#view-cfclaude-cli .btn-primary:hover {
+  background: linear-gradient(135deg, #ff9a00, #ffb300);
+}
+
+#view-cfclaude-cli .btn-secondary {
+  border-color: #ff8c00;
+  color: #ff8c00;
+}
+
+#view-cfclaude-cli .btn-secondary:hover {
+  background: rgba(255, 140, 0, 0.1);
+}
+
+/* CLI 模型选择下拉框分组 */
+#cli-model-select optgroup {
+  font-weight: 600;
+  color: #ff8c00;
+  background: #1a1a1a;
+}
+
+#cli-model-select option {
+  color: #e0e0e0;
+  background: #0f0f0f;
+  padding: 4px 8px;
+}

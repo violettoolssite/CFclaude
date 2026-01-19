@@ -1,14 +1,16 @@
 {
   "name": "cfclaude",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Claude Code / Qwen Code 多模型切换工具 - 支持 8 大 AI 服务商",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "prebuild": "cd cfclaude-cli && npm run build",
     "build": "electron-builder --win",
-    "build:win": "electron-builder --win",
-    "build:linux": "electron-builder --linux",
-    "build:mac": "electron-builder --mac"
+    "build:win": "npm run prebuild && electron-builder --win",
+    "build:linux": "npm run prebuild && electron-builder --linux",
+    "build:mac": "npm run prebuild && electron-builder --mac",
+    "postinstall": "cd cfclaude-cli && npm install"
   },
   "author": {
     "name": "violettoolssite",
@@ -20,10 +22,13 @@
     "url": "https://github.com/violettoolssite/CFclaude.git"
   },
   "devDependencies": {
-    "electron": "^28.0.0",
-    "electron-builder": "^24.9.1",
+    "electron": "^28.2.0",
+    "electron-builder": "^24.13.3",
     "png-to-ico": "^3.0.1",
     "sharp": "^0.34.5"
+  },
+  "dependencies": {
+    "axios": "^1.7.7"
   },
   "build": {
     "appId": "com.cfclaude.app",
@@ -71,7 +76,16 @@
       "main.js",
       "index.html",
       "styles.css",
-      "renderer.js"
+      "renderer.js",
+      "cfclaude-cli/dist/**/*",
+      "cfclaude-cli/package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "cfclaude-cli",
+        "to": "cfclaude-cli",
+        "filter": ["dist/**/*", "package.json"]
+      }
     ]
   }
 }
