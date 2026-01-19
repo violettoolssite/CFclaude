@@ -4,12 +4,14 @@ Claude Code / Qwen Code 多模型切换工具 - 支持 8 大 AI 服务商
 
 ## 简介
 
-CFclaude 是一款 Windows 桌面工具，用于快速切换 Claude Code 和 Qwen Code 的 AI 后端服务商。无需手动编辑环境变量，通过图形界面即可完成配置，**配置后自动启动对应的 CLI 工具**。
+CFclaude 是一款跨平台桌面工具，用于快速切换 Claude Code 和 Qwen Code 的 AI 后端服务商。无需手动编辑环境变量，通过图形界面即可完成配置，**配置后自动启动对应的 CLI 工具**。
 
 ## 功能特性
 
 - 一键切换 Claude Code / Qwen Code 后端服务商
 - 支持 8 大 AI 服务商
+- **Sub2API 网关**：内置 6 密钥负载均衡，无需配置即可使用
+- **自建网关支持**：支持用户自己搭建的 Sub2API 网关
 - **配置后自动启动 Claude Code 或 Qwen Code**
 - **集成 Qwen Code 安装和配置**（阿里云百炼专属工具）
 - **实时文件监控**：查看 AI 的文件操作（新建、编辑、删除、读取）
@@ -25,6 +27,7 @@ CFclaude 是一款 Windows 桌面工具，用于快速切换 Claude Code 和 Qwe
 
 | 服务商 | API 地址 | 推荐模型 | 启动工具 | 特点 |
 |--------|----------|----------|----------|------|
+| **Sub2API** | 内置/自建 | claude-sonnet-4.5 | Claude Code | **无需 API Key，6 密钥负载均衡** |
 | DeepSeek | api.deepseek.com | deepseek-chat | Claude Code | 编程能力强，性价比高 |
 | 豆包 | ark.cn-beijing.volces.com | doubao-seed-code | Claude Code | 视觉理解，原生兼容 |
 | Kimi | api.moonshot.cn | kimi-k2 | Claude Code | 超长上下文 128K |
@@ -53,9 +56,28 @@ CFclaude 是一款 Windows 桌面工具，用于快速切换 Claude Code 和 Qwe
 
 ## 使用方法
 
+### Sub2API 网关（推荐，无需 API Key）
+
+**内置网关模式（最简单）**
+1. 运行 CFclaude
+2. 点击侧边栏「推荐网关」
+3. 选择「内置网关」模式（默认）
+4. 选择模型（Claude Sonnet 4.5 推荐）
+5. 点击「启动 Claude Code」
+6. **无需输入任何 API Key，6 密钥自动负载均衡**
+
+**自建网关模式**
+1. 点击侧边栏「推荐网关」
+2. 选择「自建网关」模式
+3. 输入你的 Sub2API 网关地址
+4. 输入 API Key
+5. 点击「启动 Claude Code」
+
+Sub2API 项目地址：https://github.com/AIPro-ltd/sub2api
+
 ### Claude Code 配置（大多数服务商）
 
-1. 运行 CFclaude.exe
+1. 运行 CFclaude
 2. 选择服务商（DeepSeek、Kimi、豆包等）
 3. 选择模型
 4. 输入 API Key
@@ -205,6 +227,19 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
 
 推荐使用 **Qwen Code**，它是阿里云专门为 Qwen3-Coder 优化的工具，提供每天 2000 次免费额度。
 
+### Sub2API 内置网关响应很慢
+
+内置网关可能响应较慢（约 1 分钟），这是正常现象。如果需要更快的响应速度，可以：
+1. 自己搭建 Sub2API 网关
+2. 使用其他服务商（如 DeepSeek、Kimi）
+
+### 如何自建 Sub2API 网关
+
+1. 访问 https://github.com/AIPro-ltd/sub2api
+2. 按照项目说明部署到你的服务器
+3. 在 CFclaude 中选择「自建网关」模式
+4. 输入你的网关地址和 API Key
+
 ## 项目结构
 
 ```
@@ -240,6 +275,7 @@ npm run build
 
 ## 相关资源
 
+- [Sub2API 项目](https://github.com/AIPro-ltd/sub2api) - 自建 API 网关
 - [DeepSeek 开放平台](https://platform.deepseek.com/)
 - [豆包/火山引擎](https://console.volcengine.com/ark/)
 - [Kimi 开放平台](https://platform.moonshot.cn/)
