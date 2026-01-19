@@ -38,7 +38,7 @@ CFclaude 是一款跨平台桌面工具，用于快速切换 Claude Code 和 Qwe
 
 | 服务商 | API 地址 | 推荐模型 | 启动工具 | 特点 |
 |--------|----------|----------|----------|------|
-| **Sub2API** | 内置/自建 | claude-sonnet-4.5 | Claude Code | **无需 API Key，6 密钥负载均衡** |
+| **Sub2API** | 内置/自建 | claude-sonnet-4.5 | Claude Code / **CFclaude CLI** | **无需 API Key，6 密钥负载均衡** |
 | DeepSeek | api.deepseek.com | deepseek-chat | Claude Code / **CFclaude CLI** | 编程能力强，性价比高 |
 | 豆包 | ark.cn-beijing.volces.com | doubao-seed-code | Claude Code / **CFclaude CLI** | 视觉理解，原生兼容 |
 | Kimi | api.moonshot.cn | kimi-k2 | Claude Code / **CFclaude CLI** | 超长上下文 128K |
@@ -46,12 +46,12 @@ CFclaude 是一款跨平台桌面工具，用于快速切换 Claude Code 和 Qwe
 | 智谱AI | open.bigmodel.cn | glm-4.7 | Claude Code / **CFclaude CLI** | 稳定可靠，中文优化 |
 | ModelScope | api-inference.modelscope.cn | Qwen2.5-Coder-32B | **Qwen Code** / CFclaude CLI | 魔搭社区，OpenAI 兼容 |
 | NVIDIA NIM | integrate.api.nvidia.com | GLM 4.7、MiniMax M2.1 | **Qwen Code** / CFclaude CLI | 企业级推理，多模型 |
-| Cloudflare | 自建 Worker | llama-3.1-8b | Claude Code | 完全免费 |
+| Cloudflare | 自建 Worker | llama-3.1-8b | Claude Code / **CFclaude CLI** | 完全免费 |
 | Anthropic | 官方 | claude-sonnet-4 | Claude Code / **CFclaude CLI** | 官方 API |
 
 **说明：**
 - **粗体** 表示推荐使用的工具
-- CFclaude CLI 支持所有服务商（除 Cloudflare 外），无需单独安装
+- CFclaude CLI 支持所有服务商，包括第三方网关
 
 ## 下载安装
 
@@ -137,12 +137,15 @@ Sub2API 项目地址：https://github.com/AIPro-ltd/sub2api
 **使用方法：**
 1. 点击侧边栏「CFclaude CLI」
 2. 选择服务商和模型
-3. 输入 API Key（自动保存）
+3. 输入认证信息：
+   - 大多数服务商：输入 API Key
+   - **Cloudflare**：输入 Worker 地址（如 `https://your-worker.workers.dev`）
 4. 选择工作目录（可选）
 5. 点击「启动 CFclaude CLI」
 
 **特点：**
-- 支持 8 大服务商（DeepSeek、Kimi、豆包、通义千问、智谱AI、NVIDIA、ModelScope、Anthropic）
+- 支持所有服务商（DeepSeek、Kimi、豆包、通义千问、智谱AI、NVIDIA、ModelScope、Anthropic、Cloudflare等）
+- 支持自定义网关和第三方 API 网关
 - 自动保存到历史配置，一键切换
 - 完全集成到主程序，无需外部依赖
 - 支持自定义模型添加

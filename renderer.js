@@ -2334,7 +2334,7 @@ async function applyRecommendedGateway() {
 // ==================== CFclaude CLI 集成 ====================
 
 // CLI 服务商配置：直接复用主项目 PROVIDERS，保持一致，只补充占位符
-const CLI_PROVIDER_IDS = ['deepseek', 'kimi', 'doubao', 'qwen', 'zhipu', 'nvidia', 'modelscope', 'anthropic'];
+const CLI_PROVIDER_IDS = ['deepseek', 'kimi', 'doubao', 'qwen', 'zhipu', 'nvidia', 'modelscope', 'anthropic', 'cloudflare'];
 const CLI_PROVIDERS = {};
 
 CLI_PROVIDER_IDS.forEach((id) => {
@@ -2344,6 +2344,7 @@ CLI_PROVIDER_IDS.forEach((id) => {
   let placeholder = 'API Key';
   if (id === 'nvidia') placeholder = 'nvapi-...';
   if (id === 'deepseek' || id === 'kimi' || id === 'qwen') placeholder = 'sk-...';
+  if (id === 'cloudflare') placeholder = 'https://your-worker.workers.dev';
 
   CLI_PROVIDERS[id] = {
     name: p.name,
@@ -2451,7 +2452,12 @@ function updateCliApiKeyInput() {
   const inputEl = document.getElementById('cli-api-key');
   
   if (labelEl && providerConfig) {
-    labelEl.textContent = `${providerConfig.name} API Key`;
+    // Cloudflare 特殊处理：显示 "Worker 地址" 而不是 "API Key"
+    if (provider === 'cloudflare') {
+      labelEl.textContent = 'Worker 地址';
+    } else {
+      labelEl.textContent = `${providerConfig.name} API Key`;
+    }
   }
   
   if (inputEl && providerConfig) {
