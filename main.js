@@ -365,6 +365,102 @@ ipcMain.handle('apply-config', async (event, config) => {
   });
 });
 
+// 测试 API 连接（用于推荐网关的负载均衡）
+// 使用快速模式：只检查服务器是否响应，不做完整 API 调用
+ipcMain.handle('test-api-connection', async (event, config) => {
+  const https = require('https');
+  const http = require('http');
+  
+  return new Promise((resolve) => {
+    const url = new URL(config.baseUrl);
+    const isHttps = url.protocol === 'https:';
+    const client = isHttps ? https : http;
+    
+    // 使用 HEAD 请求快速检测服务器可达性
+    const options = {
+      hostname: url.hostname,
+      port: url.port || (isHttps ? 443 : 80),
+      path: url.pathname,
+      method: 'HEAD',
+      timeout: 15000,  // 15秒超时用于快速检测
+      headers: {
+        'x-api-key': config.authToken
+      }
+    };
+    
+    const req = client.request(options, (res) => {
+      // 只要服务器响应就认为可用
+      // 4xx/5xx 也表示服务器活跃，密钥验证由实际使用时处理
+      resolve({ success: true, statusCode: res.statusCode });
+    });
+    
+    req.on('timeout', () => {
+      req.destroy();
+      resolve({ success: false, error: '服务器响应超时' });
+    });
+    
+    req.on('error', (e) => {
+      // 连接错误表示服务器不可达
+      resolve({ success: false, error: e.message });
+    });
+    
+    req.end();
+  });
+});
+
+// 完整 API 测试（可选，用于验证密钥有效性）
+ipcMain.handle('test-api-key', async (event, config) => {
+  const https = require('https');
+  const http = require('http');
+  
+  return new Promise((resolve) => {
+    const url = new URL(config.baseUrl);
+    const isHttps = url.protocol === 'https:';
+    const client = isHttps ? https : http;
+    
+    const options = {
+      hostname: url.hostname,
+      port: url.port || (isHttps ? 443 : 80),
+      path: url.pathname + '/v1/messages',
+      method: 'POST',
+      timeout: 120000,  // 2分钟超时，适应慢速网关
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': config.authToken,
+        'anthropic-version': '2023-06-01'
+      }
+    };
+    
+    const req = client.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        if (res.statusCode === 401 || res.statusCode === 403) {
+          resolve({ success: false, error: '密钥无效', statusCode: res.statusCode });
+        } else {
+          resolve({ success: true, statusCode: res.statusCode });
+        }
+      });
+    });
+    
+    req.on('timeout', () => {
+      req.destroy();
+      resolve({ success: false, error: '请求超时（网关响应慢）' });
+    });
+    
+    req.on('error', (e) => {
+      resolve({ success: false, error: e.message });
+    });
+    
+    req.write(JSON.stringify({
+      model: config.model || 'claude-sonnet-4-5-20250514',
+      max_tokens: 1,
+      messages: [{ role: 'user', content: 'hi' }]
+    }));
+    req.end();
+  });
+});
+
 // 清除配置
 ipcMain.handle('clear-config', async () => {
   const vars = [

@@ -260,6 +260,37 @@ select.input-field option {
   font-weight: 600;
 }
 
+/* 推荐网关按钮特殊样式 */
+.provider-btn.recommended {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-color: #ffd700;
+  color: #ffd700;
+}
+
+.provider-btn.recommended:hover {
+  background: linear-gradient(135deg, #1a1a2e 0%, #1a2a4e 100%);
+  border-color: #ffec00;
+  color: #ffec00;
+}
+
+.provider-btn.recommended.active {
+  background: linear-gradient(135deg, #ffd700 0%, #ffec00 100%);
+  border-color: #ffd700;
+  color: #0a0a0a;
+}
+
+.sidebar-btn.recommended-btn {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-color: #ffd700;
+  color: #ffd700;
+}
+
+.sidebar-btn.recommended-btn:hover {
+  background: linear-gradient(135deg, #1a1a2e 0%, #1a2a4e 100%);
+  border-color: #ffec00;
+  color: #ffec00;
+}
+
 /* 配置区域 */
 .config-section {
   background: #111;
@@ -1437,4 +1468,85 @@ select.input-field option {
   background: linear-gradient(135deg, #ff6666 0%, #dd3333 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(255, 68, 68, 0.4);
+}
+
+/* ==================== 推荐网关样式 ==================== */
+
+.recommended-info {
+  background: linear-gradient(135deg, #0a0a14 0%, #0d1120 100%);
+  border-color: #ffd700;
+}
+
+.recommended-info h3 {
+  color: #ffd700;
+}
+
+.gateway-config-display {
+  margin: 16px 0;
+  background: #0a0a0a;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #252525;
+}
+
+.config-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.config-item:last-child {
+  border-bottom: none;
+}
+
+.config-label {
+  color: #666;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 80px;
+}
+
+.config-value {
+  color: #ccc;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 12px;
+  flex: 1;
+  word-break: break-all;
+}
+
+.config-value.masked {
+  color: #ffd700;
+  font-weight: 500;
+}
+
+.btn-copy-masked {
+  padding: 4px 10px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: #888;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-copy-masked:hover {
+  background: #252525;
+  border-color: #ffd700;
+  color: #ffd700;
+}
+
+.security-note {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 215, 0, 0.08);
+  border-left: 3px solid #ffd700;
+  border-radius: 4px;
+  color: #aaa;
+  font-size: 11px;
+  line-height: 1.5;
 }

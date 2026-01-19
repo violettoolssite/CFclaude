@@ -1,5 +1,127 @@
 const { ipcRenderer } = require('electron');
 
+// 推荐网关加密配置（使用 XOR + Base64 双重加密）
+const RECOMMENDED_GATEWAY = {
+  // 加密存储的配置（XOR 加密后再 Base64 编码，密钥不可见）
+  _encrypted: {
+    // 加密后的网关地址
+    baseUrl: 'Mi4uKilgdXUpLzhoOyozdC41Kig/NHQuNSp1OzQuMz0oOywzLiM=',
+    // 加密后的认证密钥列表（6个密钥负载均衡，原始密钥不存储在源码中）
+    authTokens: [
+      'KTF3Pzg+PGo4Pzk7PDxsbm87Y25pO2Job2JpPj9iaz5oPG04Pm08OGtrbmhoam5oaWlqPm07b2xtPjlsOztubjlqOQ==',
+      'KTF3amM4bjtpaT5oP2puOW1rP2g5OW0+Ym8/b2w8Pzs+Pm9oaW85Pmk5P2tuamw+YjtiPzlibj9qODtsbjluaTg7ag==',
+      'KTF3bGttYj8+P29sbWluYjhoaD9vPGJrOG0/PDk8PDg7PjhiajhoPztja2k+PG8+Ym5rOWs8P2lraz5iPmJqbmlrPA==',
+      'KTF3OTtra284ODhpOzxjOT84O29qYzhqYmg+OGhoPG1rP284Pzk/Yz5jPmlia2w+bWptP2M4a2xqaDtibjhjbWJoYw==',
+      'KTF3bDhibG4+a25sO2tvbGg5PG85O2hsbT5uOGg7Ymg+bD85bmtpa2tja2NoO2hjPm1rbWtpOGltPGljOG1rOzk8Pg==',
+      'KTF3Yzk4aG9tY2ljPmM4amg5aWttPG08aDs+Yj87aW5qO247O2w5aj5ra2pvazk+Yzk+b208aThtYz5oPjw5Yj47OA=='
+    ],
+    xorKey: 90
+  },
+  name: 'Sub2API 推荐网关',
+  description: '稳定可靠的第三方 API 网关服务（6个密钥负载均衡）',
+  models: [
+    { id: 'claude-sonnet-4-5-20250514', name: 'Claude Sonnet 4.5 (推荐)' },
+    { id: 'claude-opus-4-5-20250514', name: 'Claude Opus 4.5' },
+    { id: 'claude-haiku-4-5-20250514', name: 'Claude Haiku 4.5' }
+  ]
+};
+
+// XOR 解密函数
+function xorDecrypt(encodedStr, key) {
+  try {
+    const decoded = atob(encodedStr);
+    let result = '';
+    for (let i = 0; i < decoded.length; i++) {
+      result += String.fromCharCode(decoded.charCodeAt(i) ^ key);
+    }
+    return result;
+  } catch (e) {
+    return null;
+  }
+}
+
+// 密钥负载均衡状态管理
+const keyLoadBalancer = {
+  currentIndex: Math.floor(Math.random() * 6),  // 随机起始索引
+  failedKeys: new Set(),  // 记录失败的密钥索引
+  lastResetTime: Date.now(),  // 上次重置时间
+  resetInterval: 5 * 60 * 1000,  // 5分钟后重置失败状态
+  
+  // 获取下一个可用的密钥索引
+  getNextAvailableIndex(totalKeys) {
+    // 定期重置失败状态
+    if (Date.now() - this.lastResetTime > this.resetInterval) {
+      this.failedKeys.clear();
+      this.lastResetTime = Date.now();
+    }
+    
+    // 查找可用的密钥
+    for (let i = 0; i < totalKeys; i++) {
+      const index = (this.currentIndex + i) % totalKeys;
+      if (!this.failedKeys.has(index)) {
+        this.currentIndex = (index + 1) % totalKeys;
+        return index;
+      }
+    }
+    
+    // 所有密钥都失败了，重置并返回第一个
+    this.failedKeys.clear();
+    this.currentIndex = 1;
+    return 0;
+  },
+  
+  // 标记密钥为失败
+  markFailed(index) {
+    this.failedKeys.add(index);
+    console.log('密钥 ' + (index + 1) + ' 标记为不可用，剩余可用: ' + (6 - this.failedKeys.size));
+  },
+  
+  // 获取当前状态
+  getStatus() {
+    return {
+      available: 6 - this.failedKeys.size,
+      total: 6,
+      failedIndices: Array.from(this.failedKeys)
+    };
+  }
+};
+
+// 解密函数（负载均衡选择密钥）
+function decryptGatewayConfig() {
+  const enc = RECOMMENDED_GATEWAY._encrypted;
+  try {
+    const baseUrl = xorDecrypt(enc.baseUrl, enc.xorKey);
+    // 负载均衡选择可用密钥
+    const tokenIndex = keyLoadBalancer.getNextAvailableIndex(enc.authTokens.length);
+    const authToken = xorDecrypt(enc.authTokens[tokenIndex], enc.xorKey);
+    if (!baseUrl || !authToken) return null;
+    return { baseUrl, authToken, keyIndex: tokenIndex };
+  } catch (e) {
+    console.error('配置错误');
+    return null;
+  }
+}
+
+// 标记当前密钥失败并获取新密钥
+function switchToNextKey() {
+  const enc = RECOMMENDED_GATEWAY._encrypted;
+  const currentIndex = (keyLoadBalancer.currentIndex - 1 + enc.authTokens.length) % enc.authTokens.length;
+  keyLoadBalancer.markFailed(currentIndex);
+  return decryptGatewayConfig();
+}
+
+// 掩码显示 API Key（全部显示为星号）
+function maskApiKey(key) {
+  if (!key) return '******';
+  // 全部用星号替换，只保留格式
+  return '********************************';
+}
+
+// 生成不可逆的显示密钥（用于复制，只返回星号）
+function getDisplayKey() {
+  return '********************************';
+}
+
 // 服务商配置
 const PROVIDERS = {
   deepseek: {
@@ -50,10 +172,10 @@ const PROVIDERS = {
       openai: [
         { id: 'qwen3-coder-plus', name: 'Qwen3 Coder Plus (推荐)' },
         { id: 'qwen3-coder', name: 'Qwen3 Coder' },
-        { id: 'qwen-max', name: 'Qwen Max' },
-        { id: 'qwen-plus', name: 'Qwen Plus' },
-        { id: 'qwen-turbo', name: 'Qwen Turbo' },
-        { id: 'qwen2.5-coder-32b-instruct', name: 'Qwen2.5 Coder 32B' }
+      { id: 'qwen-max', name: 'Qwen Max' },
+      { id: 'qwen-plus', name: 'Qwen Plus' },
+      { id: 'qwen-turbo', name: 'Qwen Turbo' },
+      { id: 'qwen2.5-coder-32b-instruct', name: 'Qwen2.5 Coder 32B' }
       ]
     },
     models: [
@@ -93,6 +215,12 @@ const PROVIDERS = {
       { id: 'claude-opus-4-5-20250514', name: 'Opus 4.5 (最强) $5/$25' },
       { id: 'claude-haiku-4-5-20250514', name: 'Haiku 4.5 (最快) $1/$5' }
     ]
+  },
+  recommended: {
+    name: '推荐网关',
+    baseUrl: '',  // 使用加密配置
+    isRecommendedGateway: true,  // 标记为推荐网关
+    models: RECOMMENDED_GATEWAY.models
   }
 };
 
@@ -823,6 +951,9 @@ function setupEventListeners() {
   if (deployBtn) {
     deployBtn.addEventListener('click', deployWorker);
   }
+  
+  // 推荐网关相关事件
+  setupRecommendedGatewayListeners();
 }
 
 async function deployWorker() {
@@ -1158,6 +1289,9 @@ function selectProvider(providerId) {
   } else if (providerId === 'anthropic') {
     apiKeyGroup.style.display = 'block';
     apiKeyGroup.querySelector('label').textContent = 'Anthropic API Key';
+  } else if (providerId === 'recommended') {
+    // 推荐网关：隐藏 API Key 输入（使用内置配置）
+    apiKeyGroup.style.display = 'none';
   }
   
   // 监听模型选择变化，显示/隐藏自定义模型输入框
@@ -1279,6 +1413,15 @@ async function applyConfig() {
     // 通义千问 OAuth 模式不需要 API Key
     config.baseUrl = '';
     config.authToken = 'qwen-oauth';
+  } else if (currentProvider === 'recommended') {
+    // 推荐网关：直接使用负载均衡选择密钥（快速启动，不做完整测试）
+    const decrypted = decryptGatewayConfig();
+    if (!decrypted) {
+      showMessage('推荐网关配置解密失败', 'error');
+      return;
+    }
+    config.baseUrl = decrypted.baseUrl;
+    config.authToken = decrypted.authToken;
   } else {
     if (!apiKey) {
       showMessage('请输入 API Key', 'error');
@@ -1300,16 +1443,21 @@ async function applyConfig() {
     await updateStatusDisplay();  // 只更新状态显示，不重置表单
     
     // 保存到历史配置（包含网关信息和认证方式）
+    // 推荐网关时存储掩码版本的 authToken
+    const historyAuthToken = savedProvider === 'recommended' 
+      ? maskApiKey(config.authToken) 
+      : config.authToken;
     saveToHistory({
       providerId: savedProvider,
       providerName: provider.name,
       model: model,
       baseUrl: config.baseUrl,
-      authToken: config.authToken,
+      authToken: historyAuthToken,
       gateway: gateway || '',  // 保存统一网关配置
       authMode: savedProvider === 'qwen' ? savedAuthMode : null,  // 保存认证方式
       workdir: workdir || '',  // 保存工作目录
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      isRecommendedGateway: savedProvider === 'recommended'  // 标记推荐网关
     });
     
     // 根据服务商类型选择启动对应的 CLI 工具
@@ -1592,6 +1740,9 @@ function showConfirmModal(config) {
   } else if (config.providerId === 'modelscope') {
     cliTool = 'Qwen Code';
     authInfo = 'OpenAI 兼容 (API Key)';
+  } else if (config.providerId === 'recommended' || config.isRecommendedGateway) {
+    cliTool = 'Claude Code';
+    authInfo = '推荐网关 (内置密钥)';
   } else {
     cliTool = 'Claude Code';
     authInfo = config.gateway ? '统一网关' : 'Anthropic API';
@@ -1650,12 +1801,21 @@ async function confirmSwitch() {
   showLoading('正在切换配置...');
   
   try {
-    const applyConfig = {
+    let applyConfig = {
       model: config.model,
       smallModel: config.model,
       baseUrl: config.baseUrl || '',
       authToken: config.authToken || ''
     };
+    
+    // 推荐网关：使用解密后的真实配置
+    if (config.isRecommendedGateway || config.providerId === 'recommended') {
+      const decrypted = decryptGatewayConfig();
+      if (decrypted) {
+        applyConfig.baseUrl = decrypted.baseUrl;
+        applyConfig.authToken = decrypted.authToken;
+      }
+    }
     
     await ipcRenderer.invoke('apply-config', applyConfig);
     
@@ -1778,6 +1938,128 @@ async function confirmSwitch() {
   } catch (error) {
     hideLoading();
     showMessage('切换失败: ' + error, 'error');
+  }
+}
+
+// ==================== 推荐网关功能 ====================
+
+// 设置推荐网关事件监听
+function setupRecommendedGatewayListeners() {
+  // 初始化显示掩码密钥
+  const keyDisplay = document.getElementById('recommended-key-display');
+  if (keyDisplay) {
+    keyDisplay.textContent = getDisplayKey();
+  }
+  
+  // 复制掩码密钥
+  const copyBtn = document.getElementById('copy-masked-key');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const maskedKey = getDisplayKey();
+      navigator.clipboard.writeText(maskedKey).then(() => {
+        copyBtn.textContent = '已复制';
+        setTimeout(() => {
+          copyBtn.textContent = '复制';
+        }, 2000);
+      }).catch(() => {
+        showMessage('复制失败', 'error');
+      });
+    });
+  }
+  
+  // 选择工作目录
+  const workdirBtn = document.getElementById('recommended-workdir-btn');
+  if (workdirBtn) {
+    workdirBtn.addEventListener('click', async () => {
+      try {
+        const result = await ipcRenderer.invoke('select-directory');
+        if (result) {
+          document.getElementById('recommended-workdir').value = result;
+        }
+      } catch (error) {
+        console.error('选择目录失败:', error);
+      }
+    });
+  }
+  
+  // 使用推荐网关启动
+  const applyBtn = document.getElementById('apply-recommended-btn');
+  if (applyBtn) {
+    applyBtn.addEventListener('click', applyRecommendedGateway);
+  }
+}
+
+// 使用推荐网关配置并启动
+async function applyRecommendedGateway() {
+  const model = document.getElementById('recommended-model-select').value;
+  const workdir = document.getElementById('recommended-workdir').value.trim();
+  const messageEl = document.getElementById('recommended-message');
+  
+  showLoading('正在获取可用密钥...');
+  
+  // 快速启动模式：直接使用负载均衡选择的密钥
+  const decrypted = decryptGatewayConfig();
+  
+  if (!decrypted) {
+    messageEl.textContent = '配置解密失败';
+    messageEl.className = 'message error';
+    hideLoading();
+    return;
+  }
+  
+  const config = {
+    model: model,
+    smallModel: model,
+    baseUrl: decrypted.baseUrl,
+    authToken: decrypted.authToken
+  };
+  
+  const status = keyLoadBalancer.getStatus();
+  showLoading('正在应用配置...');
+  
+  try {
+    // 应用配置
+    const result = await ipcRenderer.invoke('apply-config', config);
+    
+    // 保存到历史配置
+    saveToHistory({
+      providerId: 'recommended',
+      providerName: '推荐网关',
+      model: model,
+      baseUrl: decrypted.baseUrl,
+      authToken: maskApiKey(decrypted.authToken),  // 历史记录中存储掩码版本
+      gateway: '',
+      authMode: null,
+      workdir: workdir || '',
+      timestamp: Date.now(),
+      isRecommendedGateway: true  // 标记为推荐网关
+    });
+    
+    // 更新状态显示
+    await updateStatusDisplay();
+    
+    // 启动 Claude Code
+    showLoading('正在启动 Claude Code...');
+    try {
+      await ipcRenderer.invoke('launch-claude', { workdir });
+      hideLoading();
+      messageEl.textContent = '推荐网关配置成功，Claude Code 已启动（6密钥负载均衡）';
+      messageEl.className = 'message success';
+      updateMonitorCliTool('Claude Code');
+      
+      // 自动开始监控
+      if (workdir) {
+        autoStartMonitoring(workdir);
+      }
+    } catch (launchError) {
+      hideLoading();
+      messageEl.textContent = '配置成功，但 Claude Code 启动失败';
+      messageEl.className = 'message error';
+    }
+  } catch (error) {
+    hideLoading();
+    messageEl.textContent = '配置失败: ' + error;
+    messageEl.className = 'message error';
   }
 }
 

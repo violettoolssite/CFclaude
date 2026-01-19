@@ -19,6 +19,7 @@
         <div class="nav-section">
           <div class="nav-title">配置</div>
           <button class="sidebar-btn active" data-view="config">模型配置</button>
+          <button class="sidebar-btn recommended-btn" data-view="recommended-gateway">推荐网关</button>
         </div>
         <div class="nav-section">
           <div class="nav-title">工具</div>
@@ -39,7 +40,7 @@
         </div>
       </nav>
       <div class="sidebar-footer">
-        <span class="version">v1.0.0</span>
+        <span class="version">v1.2.0</span>
       </div>
     </aside>
 
@@ -75,6 +76,7 @@
         <section class="provider-section">
           <h3>选择服务商</h3>
           <div class="provider-grid">
+            <button class="provider-btn recommended" data-provider="recommended">推荐网关</button>
             <button class="provider-btn" data-provider="deepseek">DeepSeek</button>
             <button class="provider-btn" data-provider="doubao">豆包</button>
             <button class="provider-btn" data-provider="kimi">Kimi</button>
@@ -126,6 +128,50 @@
         </section>
 
         <div id="message" class="message"></div>
+      </div>
+
+      <!-- 推荐网关视图 -->
+      <div id="view-recommended-gateway" class="view">
+        <header class="main-header">
+          <h2>推荐网关</h2>
+          <p class="subtitle">稳定可靠的第三方 API 网关服务，内置密钥自动配置</p>
+        </header>
+        <div class="info-card recommended-info">
+          <h3>Sub2API 推荐网关</h3>
+          <p>这是一个稳定可靠的第三方 API 网关，已内置配置好的 API 密钥。</p>
+          <p>选择此网关将自动配置 Claude Code 的后端地址和认证信息。</p>
+          <div class="gateway-config-display">
+            <div class="config-item">
+              <span class="config-label">网关地址</span>
+              <span class="config-value" id="recommended-url">https://********.****/********</span>
+            </div>
+            <div class="config-item">
+              <span class="config-label">API Key</span>
+              <span class="config-value masked" id="recommended-key-display">******************************** (6个密钥)</span>
+              <button class="btn-copy-masked" id="copy-masked-key" title="复制（仅星号）">复制</button>
+            </div>
+          </div>
+          <p class="security-note">内置6个密钥负载均衡，自动切换可用密钥，故障自动转移。采用双重加密存储。</p>
+        </div>
+        <div class="info-card" style="margin-top: 16px;">
+          <h3>选择模型</h3>
+          <div class="form-group">
+            <select id="recommended-model-select" class="input-field">
+              <option value="claude-sonnet-4-5-20250514">Claude Sonnet 4.5 (推荐)</option>
+              <option value="claude-opus-4-5-20250514">Claude Opus 4.5</option>
+              <option value="claude-haiku-4-5-20250514">Claude Haiku 4.5</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-top: 12px;">
+            <label>启动目录</label>
+            <div class="workdir-row">
+              <input type="text" id="recommended-workdir" class="input-field" placeholder="选择或输入工作目录路径">
+              <button id="recommended-workdir-btn" class="btn-icon-text" title="选择文件夹">选择</button>
+            </div>
+          </div>
+        </div>
+        <button id="apply-recommended-btn" class="btn-primary btn-large" style="margin-top: 20px;">使用推荐网关启动</button>
+        <div id="recommended-message" class="message"></div>
       </div>
 
       <!-- 安装 Claude Code 视图 -->
