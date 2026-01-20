@@ -11,10 +11,10 @@ CFclaude 是一款跨平台桌面工具，用于快速切换 Claude Code 和 Qwe
 ### 三种 CLI 工具支持
 - **Claude Code**：适用于大多数服务商（DeepSeek、Kimi、豆包、智谱AI、Anthropic等）
 - **Qwen Code**：专为通义千问优化，支持 OAuth 免费额度
-- **CFclaude CLI**：内置多服务商 CLI 工具，无需单独安装
+- **CF Coder**：内置多服务商 CLI 工具，无需单独安装
 
 ### 核心功能
-- 一键切换 Claude Code / Qwen Code / CFclaude CLI 后端服务商
+- 一键切换 Claude Code / Qwen Code / CF Coder 后端服务商
 - 支持 8+ AI 服务商
 - **Sub2API 网关**：内置 6 密钥负载均衡，无需配置即可使用
 - **自建网关支持**：支持用户自己搭建的 Sub2API 网关
@@ -38,20 +38,20 @@ CFclaude 是一款跨平台桌面工具，用于快速切换 Claude Code 和 Qwe
 
 | 服务商 | API 地址 | 推荐模型 | 启动工具 | 特点 |
 |--------|----------|----------|----------|------|
-| **Sub2API** | 内置/自建 | claude-sonnet-4.5 | Claude Code / **CFclaude CLI** | **无需 API Key，6 密钥负载均衡** |
-| DeepSeek | api.deepseek.com | deepseek-chat | Claude Code / **CFclaude CLI** | 编程能力强，性价比高 |
-| 豆包 | ark.cn-beijing.volces.com | doubao-seed-code | Claude Code / **CFclaude CLI** | 视觉理解，原生兼容 |
-| Kimi | api.moonshot.cn | kimi-k2 | Claude Code / **CFclaude CLI** | 超长上下文 128K |
-| 通义千问 | dashscope.aliyuncs.com | qwen3-coder-plus | **Qwen Code (OAuth)** / CFclaude CLI | 每天 2000 次免费 |
-| 智谱AI | open.bigmodel.cn | glm-4.7 | Claude Code / **CFclaude CLI** | 稳定可靠，中文优化 |
-| ModelScope | api-inference.modelscope.cn | Qwen2.5-Coder-32B | **Qwen Code** / CFclaude CLI | 魔搭社区，OpenAI 兼容 |
-| NVIDIA NIM | integrate.api.nvidia.com | GLM 4.7、MiniMax M2.1 | **Qwen Code** / CFclaude CLI | 企业级推理，多模型 |
-| Cloudflare | 自建 Worker | llama-3.1-8b | Claude Code / **CFclaude CLI** | 完全免费 |
-| Anthropic | 官方 | claude-sonnet-4 | Claude Code / **CFclaude CLI** | 官方 API |
+| **Sub2API** | 内置/自建 | claude-sonnet-4.5 | Claude Code / **CF Coder** | **无需 API Key，6 密钥负载均衡** |
+| DeepSeek | api.deepseek.com | deepseek-chat | Claude Code / **CF Coder** | 编程能力强，性价比高 |
+| 豆包 | ark.cn-beijing.volces.com | doubao-seed-code | Claude Code / **CF Coder** | 视觉理解，原生兼容 |
+| Kimi | api.moonshot.cn | kimi-k2 | Claude Code / **CF Coder** | 超长上下文 128K |
+| 通义千问 | dashscope.aliyuncs.com | qwen3-coder-plus | **Qwen Code (OAuth)** / CF Coder | 每天 2000 次免费 |
+| 智谱AI | open.bigmodel.cn | glm-4.7 | Claude Code / **CF Coder** | 稳定可靠，中文优化 |
+| ModelScope | api-inference.modelscope.cn | Qwen2.5-Coder-32B | **Qwen Code** / CF Coder | 魔搭社区，OpenAI 兼容 |
+| NVIDIA NIM | integrate.api.nvidia.com | GLM 4.7、MiniMax M2.1 | **Qwen Code** / CF Coder | 企业级推理，多模型 |
+| Cloudflare | 自建 Worker | llama-3.1-8b | Claude Code / **CF Coder** | 完全免费 |
+| Anthropic | 官方 | claude-sonnet-4 | Claude Code / **CF Coder** | 官方 API |
 
 **说明：**
 - **粗体** 表示推荐使用的工具
-- CFclaude CLI 支持所有服务商，包括第三方网关
+- CF Coder 支持所有服务商，包括第三方网关
 
 ## 下载安装
 
@@ -130,18 +130,18 @@ Sub2API 项目地址：https://github.com/AIPro-ltd/sub2api
 - 100 万 Token 免费额度（北京地域）
 - 启动命令：`qwen`
 
-### CFclaude CLI（内置工具）
+### CF Coder（内置工具）
 
-**新增功能：** 无需单独安装 Claude Code 或 Qwen Code，直接使用内置的 CFclaude CLI！
+**新增功能：** 无需单独安装 Claude Code 或 Qwen Code，直接使用内置的 CF Coder！
 
 **使用方法：**
-1. 点击侧边栏「CFclaude CLI」
+1. 点击侧边栏「CF Coder」
 2. 选择服务商和模型
 3. 输入认证信息：
    - 大多数服务商：输入 API Key
    - **Cloudflare**：输入 Worker 地址（如 `https://your-worker.workers.dev`）
 4. 选择工作目录（可选）
-5. 点击「启动 CFclaude CLI」
+5. 点击「启动内置 CF Coder」
 
 **特点：**
 - 支持所有服务商（DeepSeek、Kimi、豆包、通义千问、智谱AI、NVIDIA、ModelScope、Anthropic、Cloudflare等）
@@ -149,7 +149,7 @@ Sub2API 项目地址：https://github.com/AIPro-ltd/sub2api
 - 自动保存到历史配置，一键切换
 - 完全集成到主程序，无需外部依赖
 - 支持自定义模型添加
-- 启动命令：`cfclaude`
+- 启动命令：`cf`
 
 
 ### 自定义网关
@@ -160,14 +160,14 @@ Sub2API 项目地址：https://github.com/AIPro-ltd/sub2api
 
 右侧历史配置栏记录最近 10 条配置，包含：
 - 服务商和模型信息
-- **CLI 工具类型**（Claude Code / Qwen Code / CFclaude CLI）
+- **CLI 工具类型**（Claude Code / Qwen Code / CF Coder）
 - 认证方式（API / OAuth / 网关）
 - 工作目录
 - 配置时间
 
 点击任意历史配置即可：
 1. 自动切换到对应的服务商配置
-2. **自动启动对应的 CLI 工具**（Claude Code、Qwen Code 或 CFclaude CLI）
+2. **自动启动对应的 CLI 工具**（Claude Code、Qwen Code 或 CF Coder）
 3. 自动应用工作目录
 
 ### 文件监控与快照
@@ -339,7 +339,7 @@ npm run build:linux     # Linux (AppImage + deb)
 npm run build:mac       # macOS (dmg)
 ```
 
-### CFclaude CLI 开发
+### CF Coder 开发
 
 ```bash
 # 进入 CLI 目录
