@@ -37,6 +37,14 @@ body {
   font-weight: 700;
   color: #c8ff00;
   letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.sidebar-header .version-badge {
+  display: block;
+  font-size: 10px;
+  color: #666;
+  letter-spacing: 0.5px;
 }
 
 .sidebar-nav {
@@ -88,6 +96,33 @@ body {
   background: rgba(200, 255, 0, 0.1);
 }
 
+/* 内置工具突出显示 */
+.sidebar-btn.built-in-badge {
+  background: linear-gradient(135deg, rgba(200, 255, 0, 0.15), rgba(0, 200, 100, 0.1));
+  border-color: #4ade80;
+  color: #4ade80;
+  font-weight: 600;
+  position: relative;
+}
+
+.sidebar-btn.built-in-badge:hover {
+  background: linear-gradient(135deg, rgba(200, 255, 0, 0.25), rgba(0, 200, 100, 0.15));
+  border-color: #c8ff00;
+  color: #c8ff00;
+}
+
+.sidebar-btn .badge-new {
+  display: inline-block;
+  background: #4ade80;
+  color: #000;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 6px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
 .sidebar-footer {
   padding: 16px 20px;
   border-top: 1px solid #1a1a1a;
@@ -122,6 +157,18 @@ body {
   font-weight: 600;
   color: #fff;
   margin-bottom: 6px;
+}
+
+.main-header h2 .header-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  color: #000;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  margin-left: 10px;
+  font-weight: 700;
+  vertical-align: middle;
 }
 
 .main-header .subtitle {
@@ -1846,8 +1893,13 @@ select.input-field option {
 
 /* CLI 视图卡片标题 */
 #view-cfclaude-cli .info-card h3 {
-  color: #ff8c00;
-  border-bottom-color: rgba(255, 140, 0, 0.3);
+  color: #4ade80;
+  border-bottom-color: rgba(74, 222, 128, 0.3);
+}
+
+#view-cfclaude-cli .info-card.highlight-card {
+  border-color: rgba(74, 222, 128, 0.4);
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.08), rgba(34, 197, 94, 0.05));
 }
 
 #view-cfclaude-cli .info-card p.hint {

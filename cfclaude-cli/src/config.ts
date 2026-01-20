@@ -1,94 +1,89 @@
+import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
+import {
+  BaseLlmApi,
+  constructLlmApi,
+  LLMConfig,
+} from "@continuedev/openai-adapters";
+import {
+  Configuration,
+  DefaultApi,
+} from "@continuedev/sdk/dist/api/dist/index.js";
+
+import {
+  AuthConfig,
+  getAccessToken,
+  getOrganizationId,
+} from "./auth/workos.js";
+import { createCFWorkersLlmApi } from "./cfWorkersAdapter.js";
+import { env } from "./env.js";
+import { posthogService } from "./telemetry/posthogService.js";
+import { getVersion } from "./version.js";
+
 /**
- * Configuration management
+ * Creates user-agent header value for CLI requests
  */
+function getUserAgent(): string {
+  const version = getVersion();
+  return `CF-Coder/${version}`;
+}
 
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
-
-export interface CFclaudeConfig {
-  provider?: string;
-  model?: string;
-  apiKey?: string;
-  baseUrl?: string;  // 自定义 baseUrl（从桌面应用传递）
-  providers?: {
-    [key: string]: {
-      apiKey?: string;
-      baseUrl?: string;
-      model?: string;
-    };
+/**
+ * Merges user-agent header into request options
+ */
+function mergeUserAgentIntoRequestOptions(
+  requestOptions: ModelConfig["requestOptions"],
+): ModelConfig["requestOptions"] {
+  return {
+    ...requestOptions,
+    headers: {
+      ...requestOptions?.headers,
+      "user-agent": getUserAgent(),
+      "x-continue-unique-id": posthogService.uniqueId,
+    },
   };
 }
 
-const CONFIG_DIR = path.join(os.homedir(), '.cfclaude');
-const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
+/**
+ * CF Coder: Creates an LLM API instance using Cloudflare Workers AI
+ * Simplified version that only uses Workers URL (no API keys needed)
+ */
+export function createLlmApi(
+  model: ModelConfig,
+  authConfig: AuthConfig | null,
+): BaseLlmApi | null {
+  // CF Coder: Always use Cloudflare Workers AI adapter
+  return createCFWorkersLlmApi();
+}
 
-export async function loadConfig(): Promise<CFclaudeConfig> {
-  try {
-    if (!fs.existsSync(CONFIG_DIR)) {
-      fs.mkdirSync(CONFIG_DIR, { recursive: true });
-    }
-    
-    if (fs.existsSync(CONFIG_FILE)) {
-      const content = fs.readFileSync(CONFIG_FILE, 'utf-8');
-      return JSON.parse(content);
-    }
-  } catch (e) {
-    console.error('Error loading config:', e);
+export function getLlmApi(
+  assistant: AssistantUnrolled,
+  authConfig: AuthConfig,
+): [BaseLlmApi, ModelConfig] {
+  // CF Coder: Simplified - always use Workers AI
+  const llmApi = createCFWorkersLlmApi();
+
+  if (!llmApi) {
+    throw new Error(
+      "Failed to initialize Cloudflare Workers AI. Please check your Workers URL configuration.",
+    );
   }
-  
-  return {};
+
+  // Create a dummy model config for compatibility
+  const dummyModel: ModelConfig = {
+    provider: "cloudflare-workers",
+    model: "workers-ai",
+  } as any;
+
+  return [llmApi, dummyModel];
 }
 
-export async function saveConfig(config: CFclaudeConfig): Promise<void> {
-  try {
-    if (!fs.existsSync(CONFIG_DIR)) {
-      fs.mkdirSync(CONFIG_DIR, { recursive: true });
-    }
-    
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
-  } catch (e) {
-    console.error('Error saving config:', e);
-  }
+export function getApiClient(
+  accessToken: string | undefined | null,
+): DefaultApi {
+  return new DefaultApi(
+    new Configuration({
+      basePath: env.apiBase.replace(/\/$/, ""),
+      accessToken: accessToken ?? undefined,
+    }),
+  );
 }
-
-// 与主项目 CFclaude 验证过的配置保持一致
-export function getProviderConfig(provider: string): { baseUrl: string; defaultModel: string } {
-  const providers: { [key: string]: { baseUrl: string; defaultModel: string } } = {
-    deepseek: {
-      baseUrl: 'https://api.deepseek.com/v1',
-      defaultModel: 'deepseek-chat'
-    },
-    kimi: {
-      baseUrl: 'https://api.moonshot.cn/anthropic',
-      defaultModel: 'kimi-k2-turbo-preview'
-    },
-    doubao: {
-      baseUrl: 'https://ark.cn-beijing.volces.com/api/coding',
-      defaultModel: 'doubao-seed-code-preview-251028'
-    },
-    qwen: {
-      baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-      defaultModel: 'qwen3-coder-plus'
-    },
-    zhipu: {
-      baseUrl: 'https://open.bigmodel.cn/api/anthropic',
-      defaultModel: 'glm-4.7'
-    },
-    nvidia: {
-      baseUrl: 'https://integrate.api.nvidia.com/v1',
-      defaultModel: 'z-ai/glm4.7'
-    },
-    anthropic: {
-      baseUrl: 'https://api.anthropic.com/v1',
-      defaultModel: 'claude-sonnet-4-5-20250514'
-    },
-    modelscope: {
-      baseUrl: 'https://api-inference.modelscope.cn/v1/',
-      defaultModel: 'Qwen/Qwen2.5-Coder-32B-Instruct'
-    }
-  };
-  
-  return providers[provider] || providers.deepseek;
-}
-

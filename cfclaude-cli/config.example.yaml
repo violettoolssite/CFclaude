@@ -1,0 +1,73 @@
+# CF Coder 配置文件
+# 使用 Cloudflare Workers AI
+
+# Workers AI 代理地址
+# 将下面的地址替换为您部署的 Cloudflare Worker 地址
+# 例如: https://cf-coder-ai.your-account.workers.dev
+workerUrl: "https://your-worker.workers.dev"
+
+# 当前使用的模型
+# 注意: 要切换模型，请直接修改 workers.js 文件中的默认模型
+# 支持的模型列表: https://developers.cloudflare.com/workers-ai/models/
+currentModel: "@cf/meta/llama-3.1-8b-instruct"
+
+# 模型参数
+modelParams:
+  temperature: 0.7
+  max_tokens: 2048
+  stream: true
+
+# 可用的 Cloudflare Workers AI 模型列表
+# 这是参考列表，实际使用的模型需要在 workers.js 中配置
+availableModels:
+  # 文本生成模型
+  - name: "@cf/meta/llama-3.1-8b-instruct"
+    description: "Meta Llama 3.1 8B - 快速、高效的通用模型"
+    provider: "meta"
+
+  - name: "@cf/meta/llama-3.1-70b-instruct"
+    description: "Meta Llama 3.1 70B - 更强大的模型，适合复杂任务"
+    provider: "meta"
+
+  - name: "@cf/meta/llama-2-7b-chat-int8"
+    description: "Meta Llama 2 7B Chat - 聊天优化模型"
+    provider: "meta"
+
+  - name: "@cf/mistral/mistral-7b-instruct-v0.1"
+    description: "Mistral 7B - 高性能开源模型"
+    provider: "mistral"
+
+  - name: "@cf/deepseek-ai/deepseek-math-7b-instruct"
+    description: "DeepSeek Math - 数学和代码专用模型"
+    provider: "deepseek"
+
+  - name: "@hf/thebloke/codellama-7b-instruct-awq"
+    description: "Code Llama 7B - Meta 代码生成模型"
+    provider: "meta"
+
+# 如何切换模型:
+# 1. 在上面的列表中选择一个模型
+# 2. 编辑您的 workers.js 文件
+# 3. 修改默认模型: const modelName = body.model || "新模型名称";
+# 4. 重新部署 Worker: wrangler deploy
+# 5. 无需重启 CF Coder，直接生效
+
+# 系统提示词（可选）
+systemPrompt: |
+  You are CF Coder, an AI coding assistant powered by Cloudflare Workers AI.
+  You help developers write, review, and improve code.
+  You provide clear, concise, and accurate responses.
+
+# 其他设置
+settings:
+  # 启用流式响应
+  enableStreaming: true
+
+  # 响应超时（毫秒）
+  timeout: 30000
+
+  # 最大重试次数
+  maxRetries: 3
+
+  # 调试模式
+  debug: false

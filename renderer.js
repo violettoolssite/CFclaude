@@ -2051,10 +2051,10 @@ async function confirmSwitch() {
     // 根据服务商类型选择启动对应的 CLI 工具
     const workdir = config.workdir || '';
 
-    // 检查是否为 CFclaude CLI 配置
+    // 检查是否为 CF Coder 配置
     if (config.cliType === 'CFclaude') {
-      // 使用 CFclaude CLI 启动
-      showLoading('正在启动 CFclaude CLI...');
+      // 使用 CF Coder 启动
+      showLoading('正在启动 CF Coder...');
       try {
         await ipcRenderer.invoke('launch-cfclaude-cli', {
           provider: config.providerId,
@@ -2064,8 +2064,8 @@ async function confirmSwitch() {
           workdir
         });
         hideLoading();
-        showMessage('已切换到: ' + config.providerName + '，CFclaude CLI 已启动', 'success');
-        updateMonitorCliTool('CFclaude CLI');
+        showMessage('已切换到: ' + config.providerName + '，CF Coder 已启动', 'success');
+        updateMonitorCliTool('CF Coder');
         if (workdir) autoStartMonitoring(workdir);
       } catch (launchError) {
         hideLoading();
@@ -2331,7 +2331,7 @@ async function applyRecommendedGateway() {
   }
 }
 
-// ==================== CFclaude CLI 集成 ====================
+// ==================== CF Coder 集成 ====================
 
 // CLI 服务商配置：直接复用主项目 PROVIDERS，保持一致，只补充占位符
 const CLI_PROVIDER_IDS = ['deepseek', 'kimi', 'doubao', 'qwen', 'zhipu', 'nvidia', 'modelscope', 'anthropic', 'cloudflare'];
@@ -2545,32 +2545,32 @@ function addCliCustomModel() {
   messageEl.className = 'message success';
 }
 
-// 启动 CFclaude CLI
+// 启动 CF Coder
 async function launchCfclaudeCli() {
   const messageEl = document.getElementById('cli-message');
   const modelSelect = document.getElementById('cli-model-select');
   const apiKeyInput = document.getElementById('cli-api-key');
   const workdir = document.getElementById('cli-workdir').value.trim();
-  
+
   const selectedValue = modelSelect.value;
   if (!selectedValue) {
     messageEl.textContent = '请选择模型';
     messageEl.className = 'message error';
     return;
   }
-  
+
   // 解析 provider:model 格式
   const [provider, model] = selectedValue.split(':');
-  
+
   // 获取输入的 API Key
   const apiKey = apiKeyInput.value.trim();
-  
+
   if (!apiKey) {
     messageEl.textContent = `请输入 ${CLI_PROVIDERS[provider]?.name || provider} 的 API Key`;
     messageEl.className = 'message error';
     return;
   }
-  
+
   // 自动获取 baseUrl（用户无需填写）
   const baseUrl = CLI_PROVIDERS[provider]?.baseUrl;
   if (!baseUrl) {
@@ -2578,13 +2578,13 @@ async function launchCfclaudeCli() {
     messageEl.className = 'message error';
     return;
   }
-  
+
   // 启动时自动保存 API Key
   const savedKeys = loadCliKeys();
   savedKeys[provider] = apiKey;
   saveCliKeys(savedKeys);
-  
-  showLoading('正在启动 CFclaude CLI...');
+
+  showLoading('正在启动 CF Coder...');
   
   try {
     await ipcRenderer.invoke('launch-cfclaude-cli', {
@@ -2606,16 +2606,16 @@ async function launchCfclaudeCli() {
       authMode: null,
       workdir: workdir || '',
       timestamp: Date.now(),
-      cliType: 'CFclaude',  // 标记为 CFclaude CLI
+      cliType: 'CFclaude',  // 标记为 CF Coder
       authInfo: CLI_PROVIDERS[provider]?.name || provider  // 服务商名称
     });
 
     hideLoading();
-    messageEl.textContent = `CFclaude CLI 已启动 - ${CLI_PROVIDERS[provider]?.name} / ${model}`;
+    messageEl.textContent = `CF Coder 已启动 - ${CLI_PROVIDERS[provider]?.name} / ${model}`;
     messageEl.className = 'message success';
 
     // 更新监控
-    updateMonitorCliTool('CFclaude CLI');
+    updateMonitorCliTool('CF Coder');
     if (workdir) {
       autoStartMonitoring(workdir);
     }

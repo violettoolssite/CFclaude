@@ -1,0 +1,13 @@
+# CF Coder - Cloudflare Workers AI 配置
+
+# 【必填】您的 Cloudflare Worker 地址
+# 例如: https://cf-coder-ai.your-account.workers.dev
+workerUrl: "https://your-worker.workers.dev"
+
+# 当前模型（在 workers.js 中配置）
+currentModel: "@cf/meta/llama-3.1-8b-instruct"
+
+# 模型参数
+temperature: 0.7
+max_tokens: 2048
+stream: true

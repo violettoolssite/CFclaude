@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CFclaude - AI 编程助手配置管理</title>
+  <title>CFclaude - 多模型 AI 编程助手</title>
   <link rel="stylesheet" href="styles.css">
   <!-- highlight.js 代码高亮 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
@@ -14,6 +14,7 @@
     <aside class="sidebar">
       <div class="sidebar-header">
         <h1>CFclaude</h1>
+        <span class="version-badge">多模型 AI 编程助手</span>
       </div>
       <nav class="sidebar-nav">
         <div class="nav-section">
@@ -22,8 +23,11 @@
           <button class="sidebar-btn recommended-btn" data-view="recommended-gateway">推荐网关</button>
         </div>
         <div class="nav-section">
-          <div class="nav-title">工具</div>
-          <button class="sidebar-btn cfclaude-cli-btn" data-view="cfclaude-cli">CFclaude CLI</button>
+          <div class="nav-title">内置工具</div>
+          <button class="sidebar-btn cfclaude-cli-btn built-in-badge" data-view="cfclaude-cli">CF Coder <span class="badge-new">内置</span></button>
+        </div>
+        <div class="nav-section">
+          <div class="nav-title">第三方工具</div>
           <button class="sidebar-btn" data-view="install-claude">安装 Claude Code</button>
           <button class="sidebar-btn" data-view="install-qwen">安装 Qwen Code</button>
           <button class="sidebar-btn" data-view="install-node">下载 Node.js</button>
@@ -42,7 +46,7 @@
         </div>
       </nav>
       <div class="sidebar-footer">
-        <span class="version">v1.2.0</span>
+        <span class="version">v2.0.0</span>
       </div>
     </aside>
 
@@ -50,8 +54,8 @@
       <!-- 模型配置视图 -->
       <div id="view-config" class="view active">
         <header class="main-header">
-          <h2>AI 编程助手配置</h2>
-          <p class="subtitle">一键切换 Claude Code / Qwen Code 后端服务商</p>
+          <h2>模型配置</h2>
+          <p class="subtitle">一键切换第三方 CLI 工具 (Claude Code / Qwen Code) 的后端服务商</p>
         </header>
 
         <div class="content-grid">
@@ -200,14 +204,14 @@
         <div id="recommended-message" class="message"></div>
       </div>
 
-      <!-- CFclaude CLI 视图 -->
+      <!-- CF Coder 视图 -->
       <div id="view-cfclaude-cli" class="view">
         <header class="main-header">
-          <h2>CFclaude CLI</h2>
-          <p class="subtitle">多服务商终端 AI 编程助手</p>
+          <h2>CF Coder <span class="header-badge">内置工具</span></h2>
+          <p class="subtitle">多模型终端 AI 编程助手 - 无需安装，开箱即用</p>
         </header>
-        
-        <div class="info-card">
+
+        <div class="info-card highlight-card">
           <h3>选择模型</h3>
           <div class="form-group">
             <label>模型</label>
@@ -233,7 +237,7 @@
               <button id="cli-workdir-btn" class="btn-icon-text">选择</button>
             </div>
           </div>
-          <button id="cli-launch-btn" class="btn-primary btn-large">启动 CFclaude CLI</button>
+          <button id="cli-launch-btn" class="btn-primary btn-large">启动内置 CF Coder</button>
         </div>
         
         <div id="cli-message" class="message"></div>

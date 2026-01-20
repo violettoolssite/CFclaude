@@ -1,7 +1,7 @@
 {
   "name": "cfclaude",
-  "version": "1.2.1",
-  "description": "Claude Code / Qwen Code 多模型切换工具 - 支持 8 大 AI 服务商",
+  "version": "2.0.0",
+  "description": "CF Coder 桌面版 - 多模型 AI 编程助手",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -10,7 +10,7 @@
     "build:win": "npm run prebuild && electron-builder --win",
     "build:linux": "npm run prebuild && electron-builder --linux",
     "build:mac": "npm run prebuild && electron-builder --mac",
-    "postinstall": "cd cfclaude-cli && npm install"
+    "postinstall": "cd cfclaude-cli && npm install --legacy-peer-deps"
   },
   "author": {
     "name": "violettoolssite",
@@ -38,7 +38,7 @@
     "win": {
       "target": [
         {
-      "target": "portable",
+          "target": "portable",
           "arch": ["x64"]
         },
         {
@@ -82,9 +82,13 @@
     ],
     "extraResources": [
       {
-        "from": "cfclaude-cli",
-        "to": "cfclaude-cli",
-        "filter": ["dist/**/*", "package.json"]
+        "from": "cfclaude-cli/dist",
+        "to": "cfclaude-cli/dist",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "cfclaude-cli/package.json",
+        "to": "cfclaude-cli/package.json"
       }
     ]
   }
