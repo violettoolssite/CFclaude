@@ -3,6 +3,9 @@ node_modules/
 dist/
 release/
 
+# 允许 packages 的 dist 目录（GitHub Actions 需要）
+!cfclaude-cli/packages/*/dist/
+
 # 日志
 *.log
 

@@ -25,12 +25,6 @@ jobs:
       - name: Install root dependencies
         run: npm ci --ignore-scripts
 
-      - name: Build local packages
-        run: |
-          cd cfclaude-cli
-          npm run build:local-deps
-        shell: bash
-
       - name: Install CLI dependencies
         run: |
           cd cfclaude-cli
@@ -62,12 +56,6 @@ jobs:
 
       - name: Install root dependencies
         run: npm ci --ignore-scripts
-
-      - name: Build local packages
-        run: |
-          cd cfclaude-cli
-          npm run build:local-deps
-        shell: bash
 
       - name: Install CLI dependencies
         run: |
@@ -102,12 +90,6 @@ jobs:
 
       - name: Install root dependencies
         run: npm ci --ignore-scripts
-
-      - name: Build local packages
-        run: |
-          cd cfclaude-cli
-          npm run build:local-deps
-        shell: bash
 
       - name: Install CLI dependencies
         run: |
@@ -161,4 +143,3 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-

@@ -1,0 +1,34 @@
+import { OpenAI } from "openai/index";
+import { ChatCompletion, ChatCompletionChunk, ChatCompletionCreateParams, ChatCompletionCreateParamsNonStreaming, ChatCompletionCreateParamsStreaming, Completion, CompletionCreateParamsNonStreaming, CompletionCreateParamsStreaming, Model } from "openai/resources/index";
+import type { Response } from "openai/resources/responses/responses.js";
+import { z } from "zod";
+import { OpenAIConfigSchema } from "../types.js";
+import { BaseLlmApi, CreateRerankResponse, FimCreateParamsStreaming, RerankCreateParams } from "./base.js";
+export declare class OpenAIApi implements BaseLlmApi {
+    protected config: z.infer<typeof OpenAIConfigSchema>;
+    openai: OpenAI;
+    apiBase: string;
+    private openaiProvider?;
+    private useVercelSDK;
+    constructor(config: z.infer<typeof OpenAIConfigSchema>);
+    private initializeVercelProvider;
+    modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T;
+    protected shouldUseResponsesEndpoint(model: string): boolean;
+    modifyCompletionBody<T extends CompletionCreateParamsNonStreaming | CompletionCreateParamsStreaming>(body: T): T;
+    modifyEmbedBody<T extends OpenAI.Embeddings.EmbeddingCreateParams>(body: T): T;
+    modifyFimBody<T extends FimCreateParamsStreaming>(body: T): T;
+    modifyRerankBody<T extends RerankCreateParams>(body: T): T;
+    protected getHeaders(): Record<string, string>;
+    chatCompletionNonStream(body: ChatCompletionCreateParamsNonStreaming, signal: AbortSignal): Promise<ChatCompletion>;
+    private chatCompletionNonStreamVercel;
+    chatCompletionStream(body: ChatCompletionCreateParamsStreaming, signal: AbortSignal): AsyncGenerator<ChatCompletionChunk, any, unknown>;
+    private chatCompletionStreamVercel;
+    completionNonStream(body: CompletionCreateParamsNonStreaming, signal: AbortSignal): Promise<Completion>;
+    completionStream(body: CompletionCreateParamsStreaming, signal: AbortSignal): AsyncGenerator<Completion, any, unknown>;
+    fimStream(body: FimCreateParamsStreaming, signal: AbortSignal): AsyncGenerator<ChatCompletionChunk, any, unknown>;
+    embed(body: OpenAI.Embeddings.EmbeddingCreateParams): Promise<OpenAI.Embeddings.CreateEmbeddingResponse>;
+    rerank(body: RerankCreateParams): Promise<CreateRerankResponse>;
+    list(): Promise<Model[]>;
+    responsesNonStream(body: ChatCompletionCreateParamsNonStreaming, signal: AbortSignal): Promise<Response>;
+    responsesStream(body: ChatCompletionCreateParamsStreaming, signal: AbortSignal): AsyncGenerator<ChatCompletionChunk>;
+}

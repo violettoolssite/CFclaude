@@ -1,0 +1,170 @@
+export declare const nextEditOutcomeEventSchema_0_2_0: import("zod").ZodObject<Pick<{
+    eventName: import("zod").ZodString;
+    schema: import("zod").ZodString;
+    userId: import("zod").ZodString;
+    userAgent: import("zod").ZodString;
+    selectedProfileId: import("zod").ZodString;
+} & {
+    elapsed: import("zod").ZodNumber;
+    completionOptions: import("zod").ZodAny;
+    completionId: import("zod").ZodString;
+    requestId: import("zod").ZodOptional<import("zod").ZodString>;
+    gitRepo: import("zod").ZodOptional<import("zod").ZodString>;
+    uniqueId: import("zod").ZodString;
+    timestamp: import("zod").ZodNumber;
+    fileUri: import("zod").ZodString;
+    workspaceDirUri: import("zod").ZodString;
+    prompt: import("zod").ZodString;
+    userEdits: import("zod").ZodString;
+    userExcerpts: import("zod").ZodString;
+    originalEditableRange: import("zod").ZodString;
+    completion: import("zod").ZodString;
+    cursorPosition: import("zod").ZodObject<{
+        line: import("zod").ZodNumber;
+        character: import("zod").ZodNumber;
+    }, "strip", import("zod").ZodTypeAny, {
+        line: number;
+        character: number;
+    }, {
+        line: number;
+        character: number;
+    }>;
+    accepted: import("zod").ZodOptional<import("zod").ZodBoolean>;
+    aborted: import("zod").ZodOptional<import("zod").ZodBoolean>;
+    modelProvider: import("zod").ZodString;
+    modelName: import("zod").ZodString;
+}, "aborted" | "eventName" | "schema" | "timestamp" | "userId" | "userAgent" | "selectedProfileId" | "accepted" | "prompt" | "completion" | "modelProvider" | "modelName" | "gitRepo" | "completionId" | "uniqueId" | "completionOptions" | "elapsed" | "requestId" | "fileUri" | "workspaceDirUri" | "userEdits" | "userExcerpts" | "originalEditableRange" | "cursorPosition">, "strip", import("zod").ZodTypeAny, {
+    eventName: string;
+    schema: string;
+    timestamp: number;
+    userId: string;
+    userAgent: string;
+    selectedProfileId: string;
+    prompt: string;
+    completion: string;
+    modelProvider: string;
+    modelName: string;
+    completionId: string;
+    uniqueId: string;
+    elapsed: number;
+    fileUri: string;
+    workspaceDirUri: string;
+    userEdits: string;
+    userExcerpts: string;
+    originalEditableRange: string;
+    cursorPosition: {
+        line: number;
+        character: number;
+    };
+    aborted?: boolean | undefined;
+    accepted?: boolean | undefined;
+    gitRepo?: string | undefined;
+    completionOptions?: any;
+    requestId?: string | undefined;
+}, {
+    eventName: string;
+    schema: string;
+    timestamp: number;
+    userId: string;
+    userAgent: string;
+    selectedProfileId: string;
+    prompt: string;
+    completion: string;
+    modelProvider: string;
+    modelName: string;
+    completionId: string;
+    uniqueId: string;
+    elapsed: number;
+    fileUri: string;
+    workspaceDirUri: string;
+    userEdits: string;
+    userExcerpts: string;
+    originalEditableRange: string;
+    cursorPosition: {
+        line: number;
+        character: number;
+    };
+    aborted?: boolean | undefined;
+    accepted?: boolean | undefined;
+    gitRepo?: string | undefined;
+    completionOptions?: any;
+    requestId?: string | undefined;
+}>;
+export declare const nextEditOutcomeEventSchema_0_2_0_noCode: import("zod").ZodObject<Omit<Pick<{
+    eventName: import("zod").ZodString;
+    schema: import("zod").ZodString;
+    userId: import("zod").ZodString;
+    userAgent: import("zod").ZodString;
+    selectedProfileId: import("zod").ZodString;
+} & {
+    elapsed: import("zod").ZodNumber;
+    completionOptions: import("zod").ZodAny;
+    completionId: import("zod").ZodString;
+    requestId: import("zod").ZodOptional<import("zod").ZodString>;
+    gitRepo: import("zod").ZodOptional<import("zod").ZodString>;
+    uniqueId: import("zod").ZodString;
+    timestamp: import("zod").ZodNumber;
+    fileUri: import("zod").ZodString;
+    workspaceDirUri: import("zod").ZodString;
+    prompt: import("zod").ZodString;
+    userEdits: import("zod").ZodString;
+    userExcerpts: import("zod").ZodString;
+    originalEditableRange: import("zod").ZodString;
+    completion: import("zod").ZodString;
+    cursorPosition: import("zod").ZodObject<{
+        line: import("zod").ZodNumber;
+        character: import("zod").ZodNumber;
+    }, "strip", import("zod").ZodTypeAny, {
+        line: number;
+        character: number;
+    }, {
+        line: number;
+        character: number;
+    }>;
+    accepted: import("zod").ZodOptional<import("zod").ZodBoolean>;
+    aborted: import("zod").ZodOptional<import("zod").ZodBoolean>;
+    modelProvider: import("zod").ZodString;
+    modelName: import("zod").ZodString;
+}, "aborted" | "eventName" | "schema" | "timestamp" | "userId" | "userAgent" | "selectedProfileId" | "accepted" | "prompt" | "completion" | "modelProvider" | "modelName" | "gitRepo" | "completionId" | "uniqueId" | "completionOptions" | "elapsed" | "requestId" | "fileUri" | "workspaceDirUri" | "userEdits" | "userExcerpts" | "originalEditableRange" | "cursorPosition">, "prompt" | "completion" | "fileUri" | "workspaceDirUri" | "userEdits" | "userExcerpts" | "originalEditableRange">, "strip", import("zod").ZodTypeAny, {
+    eventName: string;
+    schema: string;
+    timestamp: number;
+    userId: string;
+    userAgent: string;
+    selectedProfileId: string;
+    modelProvider: string;
+    modelName: string;
+    completionId: string;
+    uniqueId: string;
+    elapsed: number;
+    cursorPosition: {
+        line: number;
+        character: number;
+    };
+    aborted?: boolean | undefined;
+    accepted?: boolean | undefined;
+    gitRepo?: string | undefined;
+    completionOptions?: any;
+    requestId?: string | undefined;
+}, {
+    eventName: string;
+    schema: string;
+    timestamp: number;
+    userId: string;
+    userAgent: string;
+    selectedProfileId: string;
+    modelProvider: string;
+    modelName: string;
+    completionId: string;
+    uniqueId: string;
+    elapsed: number;
+    cursorPosition: {
+        line: number;
+        character: number;
+    };
+    aborted?: boolean | undefined;
+    accepted?: boolean | undefined;
+    gitRepo?: string | undefined;
+    completionOptions?: any;
+    requestId?: string | undefined;
+}>;
