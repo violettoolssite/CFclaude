@@ -25,6 +25,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build local packages
+        run: |
+          cd cfclaude-cli
+          npm run build:local-deps
+        shell: bash
+
       - name: Build Windows
         run: npm run build:win
         env:
@@ -50,6 +56,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Build local packages
+        run: |
+          cd cfclaude-cli
+          npm run build:local-deps
+        shell: bash
 
       - name: Build Linux
         run: npm run build:linux
@@ -78,6 +90,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Build local packages
+        run: |
+          cd cfclaude-cli
+          npm run build:local-deps
+        shell: bash
 
       - name: Build macOS
         run: npm run build:mac
