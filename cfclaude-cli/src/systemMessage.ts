@@ -25,6 +25,7 @@ function isGitRepo(): boolean {
 
 /**
  * Get basic directory structure
+ * Limits output to reduce token usage for third-party APIs
  */
 function getDirectoryStructure(): string {
   try {
@@ -46,11 +47,25 @@ function getDirectoryStructure(): string {
 
     const files = walker.start().result as string[];
 
+    // Reduce file limit for third-party APIs to save tokens
+    // Check if using non-Cloudflare provider
+    const isThirdPartyApi = process.env.CF_CODER_PROVIDER && 
+      process.env.CF_CODER_PROVIDER !== 'cloudflare' &&
+      process.env.CF_CODER_PROVIDER !== 'cloudflare-workers';
+    
+    const fileLimit = isThirdPartyApi ? 50 : 500;
+    
     const filteredFiles = files
-      .slice(0, 500)
+      .slice(0, fileLimit)
       .map((file: string) => `./${file}`);
 
-    return filteredFiles.join("\n") || "No structure available";
+    const result = filteredFiles.join("\n") || "No structure available";
+    
+    if (files.length > fileLimit) {
+      return result + `\n... and ${files.length - fileLimit} more files`;
+    }
+    
+    return result;
   } catch {
     return "Directory structure not available";
   }
@@ -58,23 +73,36 @@ function getDirectoryStructure(): string {
 
 /**
  * Get git status
+ * Limits output to reduce token usage
  */
 function getGitStatus(): string {
   try {
     if (!isGitRepo()) {
       return "Not a git repository";
     }
-    const result = execSync("git status --porcelain", {
+    let result = execSync("git status --porcelain", {
       encoding: "utf-8",
       cwd: process.cwd(),
     });
+    
+    // Limit git status output for third-party APIs
+    const isThirdPartyApi = process.env.CF_CODER_PROVIDER && 
+      process.env.CF_CODER_PROVIDER !== 'cloudflare' &&
+      process.env.CF_CODER_PROVIDER !== 'cloudflare-workers';
+    
+    if (isThirdPartyApi) {
+      const lines = result.split('\n').filter(Boolean);
+      if (lines.length > 20) {
+        result = lines.slice(0, 20).join('\n') + `\n... and ${lines.length - 20} more changes`;
+      }
+    }
     return result.trim() || "Working tree clean";
   } catch {
     return "Git status not available";
   }
 }
 
-const baseSystemMessage = `You are CF Coder, an AI coding assistant. You are powered by Cloudflare Workers AI. When introducing yourself, say "CF Coder" - never say "AIAssistant" as one word. Given the user's prompt, you should use the tools available to you to answer the user's question.
+const baseSystemMessage = `You are CF Coder, a helpful AI coding assistant. Given the user's prompt, you should use the tools available to you to answer the user's question. Respond naturally and helpfully to the user.
 
 Notes:
 1. IMPORTANT: You should be concise, direct, and to the point, since your responses will be displayed on a command line interface.

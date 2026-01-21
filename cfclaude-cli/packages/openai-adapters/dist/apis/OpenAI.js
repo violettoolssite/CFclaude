@@ -212,9 +212,26 @@ export class OpenAIApi {
     async *chatCompletionStreamModelScopeFallback(body, signal) {
         // Call non-streaming API
         const nonStreamBody = { ...body, stream: false };
+        // Debug: log the request
+        if (process.env.CF_CODER_DEBUG === "true") {
+            console.log("\n[CFCoder Debug] ModelScope non-streaming request:", {
+                model: body.model,
+                messagesCount: body.messages?.length,
+                max_tokens: body.max_tokens,
+            });
+        }
         const response = await this.openai.chat.completions.create(this.modifyChatBody(nonStreamBody), { signal });
         // Convert to streaming chunk format
         const completion = response;
+        // Debug: log the response
+        if (process.env.CF_CODER_DEBUG === "true") {
+            console.log("[CFCoder Debug] ModelScope non-streaming response:", {
+                id: completion.id,
+                contentLength: completion.choices?.[0]?.message?.content?.length,
+                finishReason: completion.choices?.[0]?.finish_reason,
+                usage: completion.usage,
+            });
+        }
         if (completion.choices && completion.choices.length > 0) {
             const choice = completion.choices[0];
             const content = choice.message?.content || "";
