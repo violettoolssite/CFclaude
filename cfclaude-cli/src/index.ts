@@ -3,6 +3,7 @@
 // MUST be the first import - intercepts console/stdout/stderr before any dependencies load
 import "./init.js";
 
+import chalk from "chalk";
 import { Command } from "commander";
 
 import { chat } from "./commands/chat.js";
@@ -426,7 +427,53 @@ program.on("command:*", () => {
   void gracefulExit(1);
 });
 
+// Check if CLI is launched with proper configuration
+function checkLaunchConfiguration(): boolean {
+  const hasProvider = !!process.env.CF_CODER_PROVIDER;
+  const hasOpenAIKey = !!process.env.OPENAI_API_KEY;
+  const hasAnthropicKey = !!process.env.ANTHROPIC_API_KEY;
+  const hasWorkerUrl = !!process.env.CF_CODER_WORKER_URL;
+  
+  // If any configuration is present, allow CLI to run
+  if (hasProvider || hasOpenAIKey || hasAnthropicKey || hasWorkerUrl) {
+    return true;
+  }
+  
+  return false;
+}
+
+// Show prompt to download/use desktop app
+function showDesktopAppPrompt(): void {
+  const cfOrange = chalk.hex("#F6821F");
+  
+  process.stdout.write("\n");
+  process.stdout.write(cfOrange.bold("╔══════════════════════════════════════════════════════════════╗\n"));
+  process.stdout.write(cfOrange.bold("║") + chalk.white.bold("                    CF Coder v2.0.0                           ") + cfOrange.bold("║\n"));
+  process.stdout.write(cfOrange.bold("╠══════════════════════════════════════════════════════════════╣\n"));
+  process.stdout.write(cfOrange.bold("║") + chalk.yellow("                                                              ") + cfOrange.bold("║\n"));
+  process.stdout.write(cfOrange.bold("║") + chalk.yellow("  ⚠️  未检测到配置，请通过以下方式使用:                       ") + cfOrange.bold("║\n"));
+  process.stdout.write(cfOrange.bold("║") + chalk.yellow("                                                              ") + cfOrange.bold("║\n"));
+  process.stdout.write(cfOrange.bold("║") + chalk.cyan("  📦 下载桌面应用:                                            ") + cfOrange.bold("║\n"));
+  process.stdout.write(cfOrange.bold("║") + chalk.white("     https://github.com/violettoolssite/CFclaude/releases     ") + cfOrange.bold("║\n"));
+  process.stdout.write(cfOrange.bold("║") + chalk.yellow("                                                              ") + cfOrange.bold("║\n"));
+  process.stdout.write(cfOrange.bold("║") + chalk.cyan("  🚀 或在桌面应用中点击「启动内置 CF Coder」                   ") + cfOrange.bold("║\n"));
+  process.stdout.write(cfOrange.bold("║") + chalk.yellow("                                                              ") + cfOrange.bold("║\n"));
+  process.stdout.write(cfOrange.bold("╠══════════════════════════════════════════════════════════════╣\n"));
+  process.stdout.write(cfOrange.bold("║") + chalk.gray("  手动配置环境变量后也可直接运行:                             ") + cfOrange.bold("║\n"));
+  process.stdout.write(cfOrange.bold("║") + chalk.gray("  $env:CF_CODER_PROVIDER = 'deepseek'                         ") + cfOrange.bold("║\n"));
+  process.stdout.write(cfOrange.bold("║") + chalk.gray("  $env:OPENAI_API_KEY = 'your-api-key'                        ") + cfOrange.bold("║\n"));
+  process.stdout.write(cfOrange.bold("║") + chalk.gray("  $env:OPENAI_BASE_URL = 'https://api.deepseek.com/v1'        ") + cfOrange.bold("║\n"));
+  process.stdout.write(cfOrange.bold("╚══════════════════════════════════════════════════════════════╝\n"));
+  process.stdout.write("\n");
+}
+
 export async function runCli(): Promise<void> {
+  // Check if launched with proper configuration
+  if (!checkLaunchConfiguration()) {
+    showDesktopAppPrompt();
+    process.exit(0);
+  }
+
   // Parse arguments and handle errors
   try {
     program.parse();
