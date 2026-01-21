@@ -53,6 +53,26 @@ CFclaude 是一款跨平台桌面应用，旨在简化 AI 编程助手的配置�
 | 自动启动 | 配置完成后自动启动对应的 CLI 工具 |
 | 自定义网关 | 支持 OpenRouter、OneAPI、NewAPI 等第三方网关 |
 
+### 三种 CLI 工具对比
+
+| 特性 | Claude Code | Qwen Code | CF Coder（内置） |
+|------|-------------|-----------|------------------|
+| **安装方式** | `npm i -g @anthropic-ai/claude-code` | `npm i -g @qwen-code/qwen-code` | 无需安装，内置 |
+| **启动命令** | `claude` | `qwen` | 桌面应用启动 |
+| **API 格式** | Anthropic | OpenAI | 两者都支持 |
+| **适用服务商** | DeepSeek、Kimi、豆包、智谱AI、Anthropic | 通义千问、ModelScope、NVIDIA | 所有服务商 |
+| **免费额度** | 无 | 通义千问 OAuth 每天 2000 次 | 取决于服务商 |
+| **认证方式** | API Key | API Key / OAuth | API Key |
+| **特色功能** | 官方工具，功能完整 | 阿里云优化，OAuth 免费 | 多服务商统一管理 |
+| **环境变量** | `ANTHROPIC_*` | `OPENAI_*` | `CF_CODER_*` + `OPENAI/ANTHROPIC_*` |
+| **依赖** | Node.js | Node.js | 无（内置于桌面应用） |
+
+**选择建议：**
+
+- **Claude Code**：推荐用于 DeepSeek、Kimi、豆包、智谱AI 等支持 Anthropic 格式的服务商
+- **Qwen Code**：推荐用于通义千问（免费 OAuth 额度）、ModelScope、NVIDIA NIM
+- **CF Coder**：推荐新手使用，无需安装，支持所有服务商，配置简单
+
 ### 文件监控
 
 | 功能 | 描述 |
@@ -705,23 +725,3 @@ A: 检查：
 ## 许可证
 
 MIT License
-
-Copyright (c) 2026 violettoolssite
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
