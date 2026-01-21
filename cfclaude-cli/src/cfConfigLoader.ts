@@ -9,6 +9,7 @@ import * as path from "path";
 import * as yaml from "yaml";
 
 export type ProviderType = "cloudflare-workers" | "openai" | "anthropic";
+export type ApiFormatType = "openai" | "anthropic";
 
 /**
  * Normalize provider name from various formats to ProviderType
@@ -58,6 +59,9 @@ export interface CFCoderConfig {
   // Current provider selection
   currentProvider: ProviderType;
   currentModel: string;
+  
+  // API format (openai or anthropic) - determines which adapter to use
+  apiFormat: ApiFormatType;
 
   // Cloudflare Workers AI config
   cloudflareWorkers: {
@@ -121,6 +125,7 @@ const DEFAULT_ANTHROPIC_MODELS = [
 const DEFAULT_CONFIG: CFCoderConfig = {
   currentProvider: "cloudflare-workers",
   currentModel: "@cf/meta/llama-3.1-8b-instruct",
+  apiFormat: "anthropic",
 
   cloudflareWorkers: {
     enabled: true,
@@ -172,6 +177,7 @@ export function loadCFConfig(): CFCoderConfig {
   const envAnthropicBase = process.env.ANTHROPIC_BASE_URL;
   const envProvider = process.env.CF_CODER_PROVIDER as ProviderType | undefined;
   const envModel = process.env.CF_CODER_MODEL;
+  const envApiFormat = process.env.CF_CODER_API_FORMAT as ApiFormatType | undefined;
   const envDebug = process.env.CF_CODER_DEBUG === "true";
 
   // Try to load from config files
@@ -250,6 +256,10 @@ export function loadCFConfig(): CFCoderConfig {
 
   if (envModel && envModel.trim()) {
     config.currentModel = envModel.trim();
+  }
+
+  if (envApiFormat && (envApiFormat === "openai" || envApiFormat === "anthropic")) {
+    config.apiFormat = envApiFormat;
   }
 
   if (envDebug) {

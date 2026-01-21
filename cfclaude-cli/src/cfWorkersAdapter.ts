@@ -1,12 +1,14 @@
 /**
  * CF Coder LLM Adapters
  * Supports multiple providers: Cloudflare Workers AI, OpenAI, Anthropic
+ * Uses apiFormat to determine which API format to use for each provider
  */
 
 import { BaseLlmApi, constructLlmApi } from "@continuedev/openai-adapters";
 import {
   loadCFConfig,
   ProviderType,
+  ApiFormatType,
   getProviderDisplayName,
 } from "./cfConfigLoader.js";
 
@@ -18,33 +20,37 @@ export interface ModelInfo {
 
 /**
  * Create an LLM adapter for the current provider
+ * Uses apiFormat from config to determine which API format to use
  */
 export function createCFWorkersLlmApi(): BaseLlmApi | null {
   const config = loadCFConfig();
-  return createLlmApiForProvider(config.currentProvider, config.currentModel);
+  return createLlmApiForProvider(config.currentProvider, config.currentModel, config.apiFormat);
 }
 
 /**
  * Create an LLM adapter for a specific provider and model
  * Returns null if provider credentials are not configured
+ * @param apiFormat - Override the API format (openai or anthropic)
  */
 export function createLlmApiForProvider(
   provider: ProviderType,
-  model: string
+  model: string,
+  apiFormat?: ApiFormatType
 ): BaseLlmApi | null {
   const config = loadCFConfig();
+  const format = apiFormat || config.apiFormat || "openai";
 
   try {
-    switch (provider) {
-      case "cloudflare-workers":
-        return createCloudflareWorkersApi(config);
-      case "openai":
-        return createOpenAIApi(config, model);
-      case "anthropic":
-        return createAnthropicApi(config, model);
-      default:
-        console.error(`Unknown provider: ${provider}`);
-        return null;
+    // Cloudflare Workers always uses anthropic format (worker implements it)
+    if (provider === "cloudflare-workers") {
+      return createCloudflareWorkersApi(config);
+    }
+    
+    // Use the specified API format to create the adapter
+    if (format === "anthropic") {
+      return createAnthropicFormatApi(config, model);
+    } else {
+      return createOpenAIFormatApi(config, model);
     }
   } catch (error) {
     console.error(`Failed to create LLM adapter for ${provider}:`, error);
@@ -79,21 +85,24 @@ function createCloudflareWorkersApi(config: ReturnType<typeof loadCFConfig>): Ba
 }
 
 /**
- * Create OpenAI API adapter
+ * Create OpenAI format API adapter
+ * Used for providers that use OpenAI-compatible API (qwen, nvidia, modelscope)
  */
-function createOpenAIApi(
+function createOpenAIFormatApi(
   config: ReturnType<typeof loadCFConfig>,
   model: string
 ): BaseLlmApi | null {
-  if (!config.openai.apiKey) {
+  // Get API key from OpenAI config
+  const apiKey = config.openai.apiKey;
+  if (!apiKey) {
     throw new Error(
-      "OpenAI API key not configured. Please set OPENAI_API_KEY environment variable or configure in ~/.cfcoderrc"
+      "API key not configured. Please set OPENAI_API_KEY environment variable."
     );
   }
 
   const llmApi = constructLlmApi({
     provider: "openai",
-    apiKey: config.openai.apiKey,
+    apiKey: apiKey,
     apiBase: config.openai.apiBase,
     model: model,
     requestOptions: {
@@ -108,21 +117,24 @@ function createOpenAIApi(
 }
 
 /**
- * Create Anthropic API adapter
+ * Create Anthropic format API adapter
+ * Used for providers that use Anthropic-compatible API (deepseek, kimi, doubao, zhipu)
  */
-function createAnthropicApi(
+function createAnthropicFormatApi(
   config: ReturnType<typeof loadCFConfig>,
   model: string
 ): BaseLlmApi | null {
-  if (!config.anthropic.apiKey) {
+  // Get API key from Anthropic config
+  const apiKey = config.anthropic.apiKey;
+  if (!apiKey) {
     throw new Error(
-      "Anthropic API key not configured. Please set ANTHROPIC_API_KEY environment variable or configure in ~/.cfcoderrc"
+      "API key not configured. Please set ANTHROPIC_API_KEY environment variable."
     );
   }
 
   const llmApi = constructLlmApi({
     provider: "anthropic",
-    apiKey: config.anthropic.apiKey,
+    apiKey: apiKey,
     apiBase: config.anthropic.apiBase,
     model: model,
     requestOptions: {

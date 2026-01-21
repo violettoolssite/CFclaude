@@ -2333,9 +2333,12 @@ async function applyRecommendedGateway() {
 
 // ==================== CF Coder 集成 ====================
 
-// CLI 服务商配置：直接复用主项目 PROVIDERS，保持一致，只补充占位符
+// CLI 服务商配置：和主界面保持一致的端点
 const CLI_PROVIDER_IDS = ['deepseek', 'kimi', 'doubao', 'qwen', 'zhipu', 'nvidia', 'modelscope', 'anthropic', 'cloudflare'];
 const CLI_PROVIDERS = {};
+
+// 标记哪些服务商使用 Anthropic API 格式（其他使用 OpenAI 格式）
+const CLI_ANTHROPIC_PROVIDERS = ['deepseek', 'kimi', 'doubao', 'zhipu', 'anthropic', 'cloudflare'];
 
 CLI_PROVIDER_IDS.forEach((id) => {
   const p = PROVIDERS[id];
@@ -2346,10 +2349,12 @@ CLI_PROVIDER_IDS.forEach((id) => {
   if (id === 'deepseek' || id === 'kimi' || id === 'qwen') placeholder = 'sk-...';
   if (id === 'cloudflare') placeholder = 'https://your-worker.workers.dev';
 
+  // 使用和主界面相同的端点
   CLI_PROVIDERS[id] = {
     name: p.name,
     baseUrl: p.baseUrl,
-    placeholder
+    placeholder,
+    apiFormat: CLI_ANTHROPIC_PROVIDERS.includes(id) ? 'anthropic' : 'openai'
   };
 });
 
@@ -2571,9 +2576,12 @@ async function launchCfclaudeCli() {
     return;
   }
 
-  // 自动获取 baseUrl（用户无需填写）
-  const baseUrl = CLI_PROVIDERS[provider]?.baseUrl;
-  if (!baseUrl) {
+  // 自动获取 baseUrl 和 apiFormat（用户无需填写）
+  const providerConfig = CLI_PROVIDERS[provider];
+  const baseUrl = providerConfig?.baseUrl;
+  const apiFormat = providerConfig?.apiFormat || 'openai';
+  
+  if (!baseUrl && provider !== 'cloudflare') {
     messageEl.textContent = '未知的服务商';
     messageEl.className = 'message error';
     return;
@@ -2592,6 +2600,7 @@ async function launchCfclaudeCli() {
       model,
       apiKey,
       baseUrl,
+      apiFormat,
       workdir
     });
 

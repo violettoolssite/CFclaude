@@ -1,4 +1,5 @@
 import { loadAuthConfig } from "../auth/workos.js";
+import { loadCFConfig } from "../cfConfigLoader.js";
 import { initializeWithOnboarding } from "../onboarding.js";
 import {
   setBetaSubagentToolEnabled,
@@ -191,6 +192,52 @@ export async function initializeServices(initOptions: ServiceInitOptions = {}) {
   serviceContainer.register(
     SERVICE_NAMES.CONFIG,
     async () => {
+      // CF Coder: Check if using environment variable configuration
+      // This allows skipping network-based config loading for local providers
+      const cfConfig = loadCFConfig();
+      const envProvider = process.env.CF_CODER_PROVIDER;
+      const envApiFormat = process.env.CF_CODER_API_FORMAT;
+      
+      if (envProvider) {
+        // Using environment variable configuration - create minimal local config
+        // Check if the correct API format credentials are configured
+        const isAnthropicFormat = envApiFormat === "anthropic" || cfConfig.apiFormat === "anthropic";
+        const isOpenAIFormat = envApiFormat === "openai" || cfConfig.apiFormat === "openai";
+        
+        const isConfigured = 
+          (isAnthropicFormat && cfConfig.anthropic.enabled && cfConfig.anthropic.apiKey) ||
+          (isOpenAIFormat && cfConfig.openai.enabled && cfConfig.openai.apiKey) ||
+          (cfConfig.currentProvider === "cloudflare-workers" && cfConfig.cloudflareWorkers.enabled && cfConfig.cloudflareWorkers.workerUrl);
+        
+        if (isConfigured) {
+          logger.debug("CF Coder: Using environment variable configuration", {
+            provider: cfConfig.currentProvider,
+            model: cfConfig.currentModel,
+            apiFormat: cfConfig.apiFormat,
+          });
+          
+          // Return a minimal config that allows ModelService to use cfConfigLoader
+          const minimalConfig: ConfigServiceState = {
+            config: {
+              name: `CF Coder (${envProvider})`,
+              version: "1.0.0",
+              models: [{
+                provider: cfConfig.currentProvider,
+                model: cfConfig.currentModel,
+                name: cfConfig.currentModel,
+                roles: ["chat"],
+              } as any],
+              rules: [],
+              mcpServers: [],
+              prompts: [],
+            },
+            configPath: undefined,
+          };
+          
+          return minimalConfig;
+        }
+      }
+      
       const [authState, apiClientState, agentFileState] = await Promise.all([
         serviceContainer.get<AuthServiceState>(SERVICE_NAMES.AUTH),
         serviceContainer.get<ApiClientServiceState>(SERVICE_NAMES.API_CLIENT),

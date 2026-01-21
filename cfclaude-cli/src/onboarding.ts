@@ -62,9 +62,35 @@ export async function runOnboardingFlow(
     return false;
   }
 
-  // Step 2: Check if Workers URL is already configured
+  // Step 2: Check if CF Coder provider is configured via environment variables
+  const config = loadCFConfig();
+  const envProvider = process.env.CF_CODER_PROVIDER;
+  
+  // Check if we have valid provider configuration from environment
+  if (envProvider) {
+    const provider = config.currentProvider;
+    if (provider === "openai" && config.openai.enabled && config.openai.apiKey) {
+      console.log(
+        chalk.hex("#F6821F")(`✓ Using OpenAI-compatible provider: ${envProvider}`),
+      );
+      console.log(
+        chalk.gray(`  Model: ${config.currentModel}`),
+      );
+      return true;
+    }
+    if (provider === "anthropic" && config.anthropic.enabled && config.anthropic.apiKey) {
+      console.log(
+        chalk.hex("#F6821F")(`✓ Using Anthropic provider`),
+      );
+      console.log(
+        chalk.gray(`  Model: ${config.currentModel}`),
+      );
+      return true;
+    }
+  }
+
+  // Step 3: Check if Workers URL is already configured
   if (hasWorkerUrl()) {
-    const config = loadCFConfig();
     console.log(
       chalk.hex("#F6821F")(`✓ Using Cloudflare Workers AI at: ${config.workerUrl}`),
     );

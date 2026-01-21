@@ -556,22 +556,23 @@ ipcMain.handle('launch-cfclaude-cli', async (event, config) => {
 
     // 构建 PowerShell 启动命令
     // CF Coder 使用 ~/.cfcoderrc 配置文件和环境变量
-    // 判断提供商类型
+    // 判断提供商类型和 API 格式
     const isCloudflare = config.provider === 'cloudflare' || config.provider === 'cloudflare-workers';
-    const isAnthropic = config.provider === 'anthropic';
-    // OpenAI 兼容的提供商列表
-    const openaiCompatibleProviders = ['openai', 'nvidia', 'deepseek', 'kimi', 'doubao', 'qwen', 'zhipu', 'modelscope', 'recommended'];
-    const isOpenAICompatible = openaiCompatibleProviders.includes(config.provider);
+    const apiFormat = config.apiFormat || 'openai';
+    const isAnthropicFormat = apiFormat === 'anthropic';
+    const isOpenAIFormat = apiFormat === 'openai';
 
     const psCommand = `
       Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force;
       cd '${escapedWorkdir}';
+      $env:FORCE_COLOR = '1';
       $env:CF_CODER_PROVIDER = '${config.provider}';
       $env:CF_CODER_MODEL = '${config.model}';
-      $env:OPENAI_API_KEY = '${isOpenAICompatible ? config.apiKey : ''}';
-      $env:OPENAI_BASE_URL = '${isOpenAICompatible ? config.baseUrl : ''}';
-      $env:ANTHROPIC_API_KEY = '${isAnthropic ? config.apiKey : ''}';
-      $env:ANTHROPIC_BASE_URL = '${isAnthropic ? config.baseUrl : ''}';
+      $env:CF_CODER_API_FORMAT = '${apiFormat}';
+      $env:OPENAI_API_KEY = '${isOpenAIFormat ? config.apiKey : ''}';
+      $env:OPENAI_BASE_URL = '${isOpenAIFormat ? config.baseUrl : ''}';
+      $env:ANTHROPIC_API_KEY = '${isAnthropicFormat ? config.apiKey : ''}';
+      $env:ANTHROPIC_BASE_URL = '${isAnthropicFormat ? config.baseUrl : ''}';
       $env:CF_CODER_WORKER_URL = '${isCloudflare ? config.baseUrl : ''}';
       node '${escapedCliPath}'
     `.replace(/\n\s*/g, ' ');
