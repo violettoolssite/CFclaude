@@ -76,30 +76,37 @@ CFclaude 是一款跨平台桌面应用，旨在简化 AI 编程助手的配置�
 
 ### 服务商列表
 
-| 服务商 | API 地址 | API 格式 | 推荐模型 | 特点 |
+| 服务商 | API 格式 | 推荐模型 | 启动工具 | 特点 |
 |--------|----------|----------|----------|------|
-| DeepSeek | api.deepseek.com | OpenAI | deepseek-chat, deepseek-coder | 编程能力强，性价比高 |
-| Kimi | api.moonshot.cn | OpenAI | kimi-k2 | 超长上下文 128K |
-| 豆包 | ark.cn-beijing.volces.com | OpenAI | doubao-seed-code | 视觉理解，原生兼容 |
-| 通义千问 | dashscope.aliyuncs.com | OpenAI | qwen3-coder-plus | 每天 2000 次免费（OAuth） |
-| 智谱AI | open.bigmodel.cn | OpenAI | glm-4.7 | 稳定可靠，中文优化 |
-| ModelScope | api-inference.modelscope.cn | OpenAI | Qwen2.5-Coder-32B | 魔搭社区，免费额度 |
-| NVIDIA NIM | integrate.api.nvidia.com | OpenAI | GLM 4.7, MiniMax M2.1 | 企业级推理 |
-| Anthropic | api.anthropic.com | Anthropic | claude-sonnet-4 | 官方 API |
-| Cloudflare | 自建 Worker | Anthropic | @cf/meta/llama-3.1-8b | 完全免费 |
+| DeepSeek | Anthropic | deepseek-chat, deepseek-reasoner | Claude Code | 编程能力强，性价比高 |
+| Kimi | Anthropic | kimi-k2-turbo-preview | Claude Code | 超长上下文 128K |
+| 豆包 | Anthropic | doubao-seed-code | Claude Code | 视觉理解，原生兼容 |
+| 智谱AI | Anthropic | glm-4.7 | Claude Code | 稳定可靠，中文优化 |
+| 通义千问 | OpenAI | qwen3-coder-plus | Qwen Code (OAuth) | 每天 2000 次免费 |
+| ModelScope | OpenAI | Qwen2.5-Coder-32B | Qwen Code | 魔搭社区，免费额度 |
+| NVIDIA NIM | OpenAI | GLM 4.7, MiniMax M2.1 | Qwen Code | 企业级推理 |
+| Anthropic | Anthropic | claude-sonnet-4 | Claude Code | 官方 API |
+| Cloudflare | Anthropic | @cf/meta/llama-3.1-8b | Claude Code | 完全免费 |
 
-### API 地址详情
+### API 端点详情
 
-| 服务商 | 完整 API Base URL |
+**Anthropic 格式端点（用于 Claude Code）：**
+
+| 服务商 | ANTHROPIC_BASE_URL |
 |--------|-------------------|
-| DeepSeek | `https://api.deepseek.com/v1` |
-| Kimi | `https://api.moonshot.cn/v1` |
-| 豆包 | `https://ark.cn-beijing.volces.com/api/v3` |
+| DeepSeek | `https://api.deepseek.com/anthropic` |
+| Kimi | `https://api.moonshot.cn/anthropic` |
+| 豆包 | `https://ark.cn-beijing.volces.com/api/coding` |
+| 智谱AI | `https://open.bigmodel.cn/api/anthropic` |
+| Anthropic | 留空（使用官方默认） |
+
+**OpenAI 格式端点（用于 Qwen Code / CF Coder）：**
+
+| 服务商 | OPENAI_BASE_URL |
+|--------|-----------------|
 | 通义千问 | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
-| 智谱AI | `https://open.bigmodel.cn/api/paas/v4` |
 | ModelScope | `https://api-inference.modelscope.cn/v1` |
 | NVIDIA NIM | `https://integrate.api.nvidia.com/v1` |
-| Anthropic | `https://api.anthropic.com` |
 
 ### API Key 获取方式
 
