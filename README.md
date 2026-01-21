@@ -92,21 +92,28 @@ CFclaude 是一款跨平台桌面应用，旨在简化 AI 编程助手的配置�
 
 **Anthropic 格式端点（用于 Claude Code）：**
 
-| 服务商 | ANTHROPIC_BASE_URL |
-|--------|-------------------|
-| DeepSeek | `https://api.deepseek.com/anthropic` |
-| Kimi | `https://api.moonshot.cn/anthropic` |
-| 豆包 | `https://ark.cn-beijing.volces.com/api/coding` |
-| 智谱AI | `https://open.bigmodel.cn/api/anthropic` |
-| Anthropic | 留空（使用官方默认） |
+| 服务商 | ANTHROPIC_BASE_URL | 说明 |
+|--------|-------------------|------|
+| DeepSeek | `https://api.deepseek.com/anthropic` | Anthropic 兼容端点 |
+| Kimi | `https://api.moonshot.cn/anthropic` | Anthropic 兼容端点 |
+| 豆包 | `https://ark.cn-beijing.volces.com/api/coding` | Coding 专用端点 |
+| 智谱AI | `https://open.bigmodel.cn/api/anthropic` | Anthropic 兼容端点 |
+| Anthropic | 留空（使用官方默认） | 官方 API |
 
 **OpenAI 格式端点（用于 Qwen Code / CF Coder）：**
 
-| 服务商 | OPENAI_BASE_URL |
-|--------|-----------------|
-| 通义千问 | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
-| ModelScope | `https://api-inference.modelscope.cn/v1` |
-| NVIDIA NIM | `https://integrate.api.nvidia.com/v1` |
+| 服务商 | OPENAI_BASE_URL | 说明 |
+|--------|-----------------|------|
+| DeepSeek | `https://api.deepseek.com/v1` | v1 与模型版本无关 |
+| Kimi | `https://api.moonshot.cn/v1` | OpenAI 兼容端点 |
+| 豆包 | `https://ark.cn-beijing.volces.com/api/v3` | OpenAI 兼容端点 |
+| 智谱AI (通用) | `https://open.bigmodel.cn/api/paas/v4` | 通用 API 端点 |
+| 智谱AI (Coding) | `https://open.bigmodel.cn/api/coding/paas/v4` | Coding 专用端点 |
+| 通义千问 | `https://dashscope.aliyuncs.com/compatible-mode/v1` | OpenAI 兼容模式 |
+| ModelScope | `https://api-inference.modelscope.cn/v1` | 魔搭社区 |
+| NVIDIA NIM | `https://integrate.api.nvidia.com/v1` | 企业级推理 |
+
+> **注意**：智谱AI 的 Coding 端点仅限 Coding 场景，通用场景请使用通用端点。
 
 ### API Key 获取方式
 
