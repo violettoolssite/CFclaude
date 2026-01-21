@@ -335,9 +335,14 @@ ipcMain.handle('get-config', async () => {
 ipcMain.handle('apply-config', async (event, config) => {
   const commands = [];
   
+  // 始终设置 ANTHROPIC_BASE_URL：有值则设置，无值则清除（使用官方默认）
   if (config.baseUrl) {
     commands.push(`[Environment]::SetEnvironmentVariable('ANTHROPIC_BASE_URL', '${config.baseUrl}', 'User')`);
+  } else {
+    // 清除旧的 baseUrl，使用 Anthropic 官方默认地址
+    commands.push(`[Environment]::SetEnvironmentVariable('ANTHROPIC_BASE_URL', $null, 'User')`);
   }
+  
   if (config.authToken) {
     commands.push(`[Environment]::SetEnvironmentVariable('ANTHROPIC_AUTH_TOKEN', '${config.authToken}', 'User')`);
   }

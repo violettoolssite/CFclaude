@@ -46,7 +46,8 @@
           "arch": ["x64"]
         }
       ],
-      "icon": "icon.ico"
+      "icon": "icon.ico",
+      "signAndEditExecutable": false
     },
     "linux": {
       "target": [
