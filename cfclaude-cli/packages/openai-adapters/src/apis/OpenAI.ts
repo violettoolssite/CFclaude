@@ -84,7 +84,9 @@ export class OpenAIApi implements BaseLlmApi {
   }
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
     // Add stream_options to include usage in streaming responses
-    if (body.stream) {
+    // Skip for ModelScope as it doesn't support this option and returns empty choices
+    const isModelScope = this.apiBase?.includes("modelscope.cn");
+    if (body.stream && !isModelScope) {
       (body as any).stream_options = { include_usage: true };
     }
 
@@ -254,6 +256,13 @@ export class OpenAIApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
+    // ModelScope doesn't support streaming properly - use non-streaming fallback
+    const isModelScope = this.apiBase?.includes("modelscope.cn");
+    if (isModelScope) {
+      yield* this.chatCompletionStreamModelScopeFallback(body, signal);
+      return;
+    }
+
     if (this.useVercelSDK && !this.shouldUseResponsesEndpoint(body.model)) {
       yield* this.chatCompletionStreamVercel(body, signal);
       return;
@@ -284,6 +293,43 @@ export class OpenAIApi implements BaseLlmApi {
     // Emit the usage chunk at the end if we have one
     if (lastChunkWithUsage) {
       yield lastChunkWithUsage;
+    }
+  }
+
+  // ModelScope fallback: use non-streaming API and convert to streaming format
+  private async *chatCompletionStreamModelScopeFallback(
+    body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
+  ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
+    // Call non-streaming API
+    const nonStreamBody = { ...body, stream: false } as any;
+    const response = await this.openai.chat.completions.create(
+      this.modifyChatBody(nonStreamBody),
+      { signal },
+    );
+
+    // Convert to streaming chunk format
+    const completion = response as any;
+    if (completion.choices && completion.choices.length > 0) {
+      const choice = completion.choices[0];
+      const content = choice.message?.content || "";
+      
+      // Yield content as a single chunk
+      yield {
+        id: completion.id || "modelscope-fallback",
+        object: "chat.completion.chunk" as const,
+        created: completion.created || Date.now(),
+        model: completion.model || body.model,
+        choices: [
+          {
+            index: 0,
+            delta: { content },
+            finish_reason: choice.finish_reason || "stop",
+            logprobs: null,
+          },
+        ],
+        usage: completion.usage,
+      } as ChatCompletionChunk;
     }
   }
 

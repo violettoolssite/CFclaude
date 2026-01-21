@@ -567,6 +567,9 @@ ipcMain.handle('launch-cfclaude-cli', async (event, config) => {
     const isAnthropicFormat = apiFormat === 'anthropic';
     const isOpenAIFormat = apiFormat === 'openai';
 
+    // 添加调试模式（可通过界面开关或默认开启以便排查问题）
+    const debugMode = config.debug || false;
+
     const psCommand = `
       Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force;
       cd '${escapedWorkdir}';
@@ -574,6 +577,7 @@ ipcMain.handle('launch-cfclaude-cli', async (event, config) => {
       $env:CF_CODER_PROVIDER = '${config.provider}';
       $env:CF_CODER_MODEL = '${config.model}';
       $env:CF_CODER_API_FORMAT = '${apiFormat}';
+      $env:CF_CODER_DEBUG = '${debugMode ? 'true' : ''}';
       $env:OPENAI_API_KEY = '${isOpenAIFormat ? config.apiKey : ''}';
       $env:OPENAI_BASE_URL = '${isOpenAIFormat ? config.baseUrl : ''}';
       $env:ANTHROPIC_API_KEY = '${isAnthropicFormat ? config.apiKey : ''}';

@@ -2105,7 +2105,7 @@ async function confirmSwitch() {
         }
       }
     } else if (config.providerId === 'modelscope') {
-      // ModelScope 使用 Qwen Code
+      // ModelScope 使用 Qwen Code (OpenAI 兼容)
       showLoading('正在启动 Qwen Code...');
       try {
         await ipcRenderer.invoke('launch-qwen', {
@@ -2567,11 +2567,16 @@ async function launchCfclaudeCli() {
   // 解析 provider:model 格式
   const [provider, model] = selectedValue.split(':');
 
-  // 获取输入的 API Key
+  // 获取输入的 API Key / Worker 地址
   const apiKey = apiKeyInput.value.trim();
 
   if (!apiKey) {
-    messageEl.textContent = `请输入 ${CLI_PROVIDERS[provider]?.name || provider} 的 API Key`;
+    // Cloudflare 服务商提示输入 Worker 地址
+    if (provider === 'cloudflare') {
+      messageEl.textContent = '请输入 Cloudflare Worker 地址';
+    } else {
+      messageEl.textContent = `请输入 ${CLI_PROVIDERS[provider]?.name || provider} 的 API Key`;
+    }
     messageEl.className = 'message error';
     return;
   }
@@ -2594,6 +2599,9 @@ async function launchCfclaudeCli() {
 
   showLoading('正在启动 CF Coder...');
   
+  // 调试模式：设为 true 可查看 API 响应详情
+  const debugMode = false;
+  
   try {
     await ipcRenderer.invoke('launch-cfclaude-cli', {
       provider,
@@ -2601,7 +2609,8 @@ async function launchCfclaudeCli() {
       apiKey,
       baseUrl,
       apiFormat,
-      workdir
+      workdir,
+      debug: debugMode
     });
 
     // 启动成功后，保存到历史配置

@@ -22,6 +22,7 @@ export declare class OpenAIApi implements BaseLlmApi {
     chatCompletionNonStream(body: ChatCompletionCreateParamsNonStreaming, signal: AbortSignal): Promise<ChatCompletion>;
     private chatCompletionNonStreamVercel;
     chatCompletionStream(body: ChatCompletionCreateParamsStreaming, signal: AbortSignal): AsyncGenerator<ChatCompletionChunk, any, unknown>;
+    private chatCompletionStreamModelScopeFallback;
     private chatCompletionStreamVercel;
     completionNonStream(body: CompletionCreateParamsNonStreaming, signal: AbortSignal): Promise<Completion>;
     completionStream(body: CompletionCreateParamsStreaming, signal: AbortSignal): AsyncGenerator<Completion, any, unknown>;

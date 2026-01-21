@@ -44,7 +44,9 @@ export class OpenAIApi {
     }
     modifyChatBody(body) {
         // Add stream_options to include usage in streaming responses
-        if (body.stream) {
+        // Skip for ModelScope as it doesn't support this option and returns empty choices
+        const isModelScope = this.apiBase?.includes("modelscope.cn");
+        if (body.stream && !isModelScope) {
             body.stream_options = { include_usage: true };
         }
         // o-series models - only apply for official OpenAI API
@@ -171,6 +173,12 @@ export class OpenAIApi {
         };
     }
     async *chatCompletionStream(body, signal) {
+        // ModelScope doesn't support streaming properly - use non-streaming fallback
+        const isModelScope = this.apiBase?.includes("modelscope.cn");
+        if (isModelScope) {
+            yield* this.chatCompletionStreamModelScopeFallback(body, signal);
+            return;
+        }
         if (this.useVercelSDK && !this.shouldUseResponsesEndpoint(body.model)) {
             yield* this.chatCompletionStreamVercel(body, signal);
             return;
@@ -198,6 +206,34 @@ export class OpenAIApi {
         // Emit the usage chunk at the end if we have one
         if (lastChunkWithUsage) {
             yield lastChunkWithUsage;
+        }
+    }
+    // ModelScope fallback: use non-streaming API and convert to streaming format
+    async *chatCompletionStreamModelScopeFallback(body, signal) {
+        // Call non-streaming API
+        const nonStreamBody = { ...body, stream: false };
+        const response = await this.openai.chat.completions.create(this.modifyChatBody(nonStreamBody), { signal });
+        // Convert to streaming chunk format
+        const completion = response;
+        if (completion.choices && completion.choices.length > 0) {
+            const choice = completion.choices[0];
+            const content = choice.message?.content || "";
+            // Yield content as a single chunk
+            yield {
+                id: completion.id || "modelscope-fallback",
+                object: "chat.completion.chunk",
+                created: completion.created || Date.now(),
+                model: completion.model || body.model,
+                choices: [
+                    {
+                        index: 0,
+                        delta: { content },
+                        finish_reason: choice.finish_reason || "stop",
+                        logprobs: null,
+                    },
+                ],
+                usage: completion.usage,
+            };
         }
     }
     async *chatCompletionStreamVercel(body, signal) {

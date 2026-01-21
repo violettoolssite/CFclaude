@@ -211,15 +211,15 @@ sudo dpkg -i CFclaude-x.x.x-linux-x64.deb
 |                    CF Coder v2.0.0                           |
 +--------------------------------------------------------------+
 |                                                              |
-|  [!] 未检测到配置，请通过以下方式使用:                       |
+|  [!] 未检测到配置，请通过以下方式使用:                          |
 |                                                              |
-|  [1] 下载桌面应用:                                           |
+|  [1] 下载桌面应用:                                            |
 |      https://github.com/violettoolssite/CFclaude/releases    |
 |                                                              |
-|  [2] 或在桌面应用中点击「启动内置 CF Coder」                  |
+|  [2] 或在桌面应用中点击「启动内置 CF Coder」                    |
 |                                                              |
 +--------------------------------------------------------------+
-|  手动配置环境变量后也可直接运行:                             |
+|  手动配置环境变量后也可直接运行:                                |
 |  $env:CF_CODER_PROVIDER = 'deepseek'                         |
 |  $env:OPENAI_API_KEY = 'your-api-key'                        |
 |  $env:OPENAI_BASE_URL = 'https://api.deepseek.com/v1'        |

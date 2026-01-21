@@ -291,10 +291,28 @@ export async function processStreamingResponse(
     );
 
     let chunkCount = 0;
+    const debugMode = process.env.CF_CODER_DEBUG === "true";
     for await (const chunk of streamWithBackoff) {
       chunkCount++;
 
       logger.debug("Received chunk", { chunkCount, chunk });
+      
+      // 调试模式：打印 chunk 信息帮助诊断 API 兼容性问题
+      if (debugMode) {
+        if (chunkCount === 1) {
+          console.log("\n[CFCoder Debug] First chunk structure:", JSON.stringify(chunk, null, 2));
+        }
+        // 打印每个 chunk 的关键信息
+        const hasContent = chunk.choices?.[0]?.delta?.content;
+        const hasToolCalls = chunk.choices?.[0]?.delta?.tool_calls;
+        if (hasContent) {
+          console.log(`[CFCoder Debug] Chunk #${chunkCount}: content="${hasContent.substring(0, 50)}..."`);
+        } else if (hasToolCalls) {
+          console.log(`[CFCoder Debug] Chunk #${chunkCount}: tool_calls`);
+        } else if (chunk.choices?.length === 0) {
+          console.log(`[CFCoder Debug] Chunk #${chunkCount}: empty choices (usage only)`);
+        }
+      }
 
       // Track token usage if available
       if (chunk.usage) {
@@ -359,6 +377,17 @@ export async function processStreamingResponse(
       cost,
       duration: totalDuration,
     });
+
+    // 调试模式：打印流处理总结
+    if (debugMode) {
+      console.log(`\n[CFCoder Debug] Stream complete: ${chunkCount} chunks, response length: ${aiResponse.length}, tool calls: ${toolCallsMap.size}`);
+    }
+    
+    // 检测空响应问题（用于调试 ModelScope 等 OpenAI 兼容 API）
+    if (chunkCount > 0 && aiResponse.length === 0 && toolCallsMap.size === 0) {
+      console.log("\n[CFCoder Warning] Received chunks but no content extracted. The API may have returned an unexpected format.");
+      console.log("[CFCoder Warning] This is common with ModelScope - the first chunk may only contain usage info.");
+    }
   } catch (error: any) {
     const errorDuration = Date.now() - requestStartTime;
 

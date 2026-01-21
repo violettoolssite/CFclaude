@@ -100,6 +100,15 @@ function createOpenAIFormatApi(
     );
   }
 
+  // Debug log for troubleshooting
+  if (config.debug) {
+    console.log("[CFCoder Debug] Creating OpenAI adapter:", {
+      apiBase: config.openai.apiBase,
+      model: model,
+      hasApiKey: !!apiKey,
+    });
+  }
+
   const llmApi = constructLlmApi({
     provider: "openai",
     apiKey: apiKey,
